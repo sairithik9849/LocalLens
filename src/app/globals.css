@@ -1,9 +1,6 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
-/* ============================================
-   Base Styles
-   ============================================ */
 html {
   scroll-behavior: smooth;
 }
@@ -12,9 +9,6 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* ============================================
-   Keyframe Animations
-   ============================================ */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -58,7 +52,8 @@ body {
 }
 
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {
@@ -67,7 +62,8 @@ body {
 }
 
 @keyframes pulse-glow {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
   }
   50% {
@@ -86,9 +82,6 @@ body {
   }
 }
 
-/* ============================================
-   Animation Utility Classes
-   ============================================ */
 .animate-fade-in-up {
   animation: fadeInUp 0.6s ease-out;
 }
@@ -113,9 +106,6 @@ body {
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
-/* ============================================
-   Scroll Reveal Animations
-   ============================================ */
 .reveal-bottom {
   opacity: 0;
   transform: translateY(60px) scale(0.95);
@@ -128,9 +118,6 @@ body {
   animation: revealFromBottom 0.8s ease-out forwards;
 }
 
-/* ============================================
-   Hover Effects
-   ============================================ */
 .hover-lift {
   transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
@@ -141,9 +128,6 @@ body {
   border-color: rgba(34, 211, 238, 0.7) !important;
 }
 
-/* ============================================
-   Gradient Text Utility
-   ============================================ */
 .bg-clip-text {
   -webkit-background-clip: text;
   background-clip: text;

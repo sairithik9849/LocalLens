@@ -98,7 +98,7 @@ export default function Home() {
                   />
                 </svg>
               </div>
-              <span className="bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
+              <span className="bg-linear-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
                 LocalLens
               </span>
             </Link>
@@ -108,15 +108,15 @@ export default function Home() {
               href="/login" 
               className="btn btn-sm md:btn-md transition-all duration-300 font-medium border-2 border-cyan-400/50 hover:border-cyan-400 hover:bg-cyan-400/10 hover:scale-105 hover:shadow-lg hover:shadow-cyan-400/20 bg-transparent"
             >
-              <span className="bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">Sign In</span>
+              <span className="bg-linear-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">Sign In</span>
             </Link>
             <Link 
-              href="/login" 
+              href="/signup" 
               className="btn btn-sm md:btn-md shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 font-semibold relative overflow-hidden group text-white border-none"
               style={{ background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #8b5cf6 100%)' }}
             >
               <span className="relative z-10">Get Started</span>
-              <span className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+              <span className="absolute inset-0 bg-linear-to-r from-cyan-400 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
             </Link>
           </div>
         </div>
@@ -134,7 +134,7 @@ export default function Home() {
         <div className="hero-content text-center py-20 relative z-10 animate-fade-in bg-transparent">
           <div className="max-w-4xl">
             <div className="animate-float mb-8 flex justify-center">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-cyan-500 via-blue-500 to-purple-600 flex items-center justify-center shadow-2xl" style={{ boxShadow: '0 0 40px rgba(34, 211, 238, 0.5), 0 0 60px rgba(147, 51, 234, 0.3)' }}>
+              <div className="w-24 h-24 rounded-full bg-linear-to-br from-cyan-500 via-blue-500 to-purple-600 flex items-center justify-center shadow-2xl" style={{ boxShadow: '0 0 40px rgba(34, 211, 238, 0.5), 0 0 60px rgba(147, 51, 234, 0.3)' }}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-12 w-12 text-white"
@@ -157,7 +157,7 @@ export default function Home() {
                 </svg>
               </div>
             </div>
-            <h1 className="text-6xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent animate-fade-in-up leading-tight pb-2 drop-shadow-lg" style={{ textShadow: '0 2px 25px rgba(0, 0, 0, 0.6), 0 0 40px rgba(34, 211, 238, 0.4), 0 0 60px rgba(147, 51, 234, 0.3)' }}>
+            <h1 className="text-6xl md:text-7xl font-bold mb-6 bg-linear-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent animate-fade-in-up leading-tight pb-2 drop-shadow-lg" style={{ textShadow: '0 2px 25px rgba(0, 0, 0, 0.6), 0 0 40px rgba(34, 211, 238, 0.4), 0 0 60px rgba(147, 51, 234, 0.3)' }}>
               Discover Your Neighborhood
             </h1>
             <div className="relative inline-block mb-8 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
@@ -330,7 +330,7 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             <div className="text-center animate-slide-in-left">
               <div className="avatar placeholder mb-4">
-                <div className="bg-gradient-to-br from-cyan-500 to-blue-500 text-white rounded-full w-20 h-20 shadow-lg hover:scale-110 transition-transform flex items-center justify-center border-2" style={{ borderColor: 'rgba(34, 211, 238, 0.6)' }}>
+                <div className="bg-linear-to-br from-cyan-500 to-blue-500 text-white rounded-full w-20 h-20 shadow-lg hover:scale-110 transition-transform flex items-center justify-center border-2" style={{ borderColor: 'rgba(34, 211, 238, 0.6)' }}>
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
@@ -345,7 +345,7 @@ export default function Home() {
 
             <div className="text-center animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
               <div className="avatar placeholder mb-4">
-                <div className="bg-gradient-to-br from-blue-500 to-purple-500 text-white rounded-full w-20 h-20 shadow-lg hover:scale-110 transition-transform flex items-center justify-center border-2" style={{ borderColor: 'rgba(59, 130, 246, 0.6)' }}>
+                <div className="bg-linear-to-br from-blue-500 to-purple-500 text-white rounded-full w-20 h-20 shadow-lg hover:scale-110 transition-transform flex items-center justify-center border-2" style={{ borderColor: 'rgba(59, 130, 246, 0.6)' }}>
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
@@ -360,7 +360,7 @@ export default function Home() {
 
             <div className="text-center animate-slide-in-right">
               <div className="avatar placeholder mb-4">
-                <div className="bg-gradient-to-br from-purple-500 to-pink-500 text-white rounded-full w-20 h-20 shadow-lg hover:scale-110 transition-transform flex items-center justify-center border-2" style={{ borderColor: 'rgba(147, 51, 234, 0.6)' }}>
+                <div className="bg-linear-to-br from-purple-500 to-pink-500 text-white rounded-full w-20 h-20 shadow-lg hover:scale-110 transition-transform flex items-center justify-center border-2" style={{ borderColor: 'rgba(147, 51, 234, 0.6)' }}>
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
@@ -455,7 +455,7 @@ export default function Home() {
           <p className="text-xl mb-8 text-white/90">
             Join LocalLens today and start making data-driven decisions about your community.
           </p>
-          <Link href="/login" className="btn btn-lg text-white shadow-2xl hover:scale-105 transition-transform animate-pulse-glow border-none font-semibold" style={{ background: 'linear-gradient(135deg, #22d3ee 0%, #a855f7 100%)' }}>
+          <Link href="/signup" className="btn btn-lg text-white shadow-2xl hover:scale-105 transition-transform animate-pulse-glow border-none font-semibold" style={{ background: 'linear-gradient(135deg, #22d3ee 0%, #a855f7 100%)' }}>
             Get Started Free
           </Link>
         </div>
