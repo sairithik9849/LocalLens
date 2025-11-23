@@ -26,7 +26,9 @@ function LoginForm() {
   // Check for password reset success (separate effect to avoid loop)
   useEffect(() => {
     if (searchParams.get("reset") === "success") {
-      setSuccess("Password reset successful! Please sign in with your new password.");
+      setSuccess(
+        "Password reset successful! Please sign in with your new password."
+      );
       // Remove query parameter from URL without triggering re-render
       const url = new URL(window.location.href);
       url.searchParams.delete("reset");
@@ -64,36 +66,53 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative" style={{ background: 'transparent' }}>
+    <div
+      className="min-h-screen flex items-center justify-center relative"
+      style={{ background: "transparent" }}
+    >
       {/* Background matching homepage */}
-      <div 
+      <div
         className="fixed inset-0 w-full h-full"
         style={{
           backgroundImage: `url('https://plus.unsplash.com/premium_photo-1714051660720-888e8454a021?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8bmV3JTIweW9ya3xlbnwwfHwwfHx8MA%3D%3D')`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          backgroundAttachment: 'fixed',
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          backgroundAttachment: "fixed",
           zIndex: -2,
         }}
       />
-      <div 
+      <div
         className="fixed inset-0 w-full h-full"
         style={{
-          background: 'linear-gradient(to bottom, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.3) 30%, rgba(0, 0, 0, 0.25) 60%, rgba(0, 0, 0, 0.2) 100%)',
+          background:
+            "linear-gradient(to bottom, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.3) 30%, rgba(0, 0, 0, 0.25) 60%, rgba(0, 0, 0, 0.2) 100%)",
           zIndex: -1,
-          pointerEvents: 'none',
+          pointerEvents: "none",
         }}
       />
 
       <div className="w-full max-w-md mx-auto px-4 z-10 py-8">
-        <div className="card shadow-2xl backdrop-blur-lg border border-gray-700/50" style={{ backgroundColor: 'rgba(15, 23, 42, 0.85)' }}>
+        <div
+          className="card shadow-2xl backdrop-blur-lg border border-gray-700/50"
+          style={{ backgroundColor: "rgba(15, 23, 42, 0.85)" }}
+        >
           <div className="card-body p-6">
             {/* Logo and Title */}
             <div className="text-center mb-4">
               <div className="flex flex-col items-center mb-3">
-                <Link href="/" className="mb-2" aria-label="Go to LocalLens homepage">
-                  <div className="w-16 h-16 rounded-full bg-linear-to-br from-cyan-500 via-blue-500 to-purple-600 flex items-center justify-center shadow-2xl mx-auto" style={{ boxShadow: '0 0 40px rgba(34, 211, 238, 0.5), 0 0 60px rgba(147, 51, 234, 0.3)' }}>
+                <Link
+                  href="/"
+                  className="mb-2"
+                  aria-label="Go to LocalLens homepage"
+                >
+                  <div
+                    className="w-16 h-16 rounded-full bg-linear-to-br from-cyan-500 via-blue-500 to-purple-600 flex items-center justify-center shadow-2xl mx-auto"
+                    style={{
+                      boxShadow:
+                        "0 0 40px rgba(34, 211, 238, 0.5), 0 0 60px rgba(147, 51, 234, 0.3)",
+                    }}
+                  >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       className="h-8 w-8 text-white"
@@ -121,14 +140,26 @@ function LoginForm() {
                   Welcome Back
                 </h1>
               </div>
-              <p className="text-white/70 mt-1">Sign in to your LocalLens account</p>
+              <p className="text-white/70 mt-1">
+                Sign in to your LocalLens account
+              </p>
             </div>
 
             {/* Success Message */}
             {success && (
               <div className="alert alert-success mb-3">
-                <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="stroke-current shrink-0 h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
                 <span className="text-sm">{success}</span>
               </div>
@@ -137,8 +168,18 @@ function LoginForm() {
             {/* Error Message */}
             {error && (
               <div className="alert alert-error mb-3">
-                <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="stroke-current shrink-0 h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
                 <span className="text-sm">{error}</span>
               </div>
@@ -184,7 +225,9 @@ function LoginForm() {
             <form onSubmit={handleSubmit} className="space-y-3">
               <div className="form-control">
                 <label htmlFor="email" className="label pb-1.5">
-                  <span className="label-text text-white font-medium">Email</span>
+                  <span className="label-text text-white font-medium">
+                    Email
+                  </span>
                 </label>
                 <input
                   id="email"
@@ -200,7 +243,9 @@ function LoginForm() {
 
               <div className="form-control">
                 <label htmlFor="password" className="label pb-1.5">
-                  <span className="label-text text-white font-medium">Password</span>
+                  <span className="label-text text-white font-medium">
+                    Password
+                  </span>
                 </label>
                 <div className="relative">
                   <input
@@ -225,20 +270,47 @@ function LoginForm() {
                     aria-label="Press and hold to show password"
                   >
                     {showPassword ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.29 3.29m0 0L9.88 9.88m-3.59-3.59l3.29 3.29M12 12l.01.01M21 12l-3.29-3.29m0 0L15.12 9.88m3.59 3.59L15.12 15.12m0 0L12 12" />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.29 3.29m0 0L9.88 9.88m-3.59-3.59l3.29 3.29M12 12l.01.01M21 12l-3.29-3.29m0 0L15.12 9.88m3.59 3.59L15.12 15.12m0 0L12 12"
+                        />
                       </svg>
                     ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        />
                       </svg>
                     )}
                   </button>
                 </div>
                 <div className="label justify-end mt-1">
-                  <Link 
-                    href="/forgot-password" 
+                  <Link
+                    href="/forgot-password"
                     className="label-text-alt text-cyan-400 hover:text-cyan-300 font-medium transition-all duration-200 inline-flex items-center gap-1.5 group px-2 py-1 rounded-md hover:bg-cyan-500/10 hover:shadow-sm"
                   >
                     <svg
@@ -255,7 +327,9 @@ function LoginForm() {
                         d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
                       />
                     </svg>
-                    <span className="group-hover:underline">Forgot Password?</span>
+                    <span className="group-hover:underline">
+                      Forgot Password?
+                    </span>
                   </Link>
                 </div>
               </div>
@@ -277,7 +351,10 @@ function LoginForm() {
             <div className="text-center mt-4">
               <p className="text-white/70">
                 Don't have an account?{" "}
-                <Link href="/signup" className="link link-hover text-cyan-400 hover:text-cyan-300">
+                <Link
+                  href="/signup"
+                  className="link link-hover text-cyan-400 hover:text-cyan-300"
+                >
                   Sign up
                 </Link>
               </p>
@@ -285,7 +362,10 @@ function LoginForm() {
 
             {/* Back to Home */}
             <div className="text-center mt-3">
-              <Link href="/" className="btn btn-ghost btn-sm text-white/70 hover:text-white hover:bg-slate-700/50">
+              <Link
+                href="/"
+                className="btn btn-ghost btn-sm text-white/70 hover:text-white hover:bg-slate-700/50"
+              >
                 ← Back to home
               </Link>
             </div>
@@ -298,7 +378,13 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><span className="loading loading-spinner loading-lg text-cyan-400"></span></div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <span className="loading loading-spinner loading-lg text-cyan-400"></span>
+        </div>
+      }
+    >
       <LoginForm />
     </Suspense>
   );

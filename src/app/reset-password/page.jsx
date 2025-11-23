@@ -5,7 +5,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/firebase/AuthContext";
 import { getAuthErrorMessage } from "@/firebase/authErrors";
-import { validatePassword, getPasswordRequirementsMessage } from "@/firebase/passwordValidation";
+import {
+  validatePassword,
+  getPasswordRequirementsMessage,
+} from "@/firebase/passwordValidation";
 
 function ResetPasswordForm() {
   const [password, setPassword] = useState("");
@@ -32,7 +35,9 @@ function ResetPasswordForm() {
     const mode = searchParams.get("mode");
 
     if (!code || mode !== "resetPassword") {
-      setError("Invalid or expired password reset link. Please request a new one.");
+      setError(
+        "Invalid or expired password reset link. Please request a new one."
+      );
       // Don't return early - let the form render with error message
       return;
     }
@@ -74,11 +79,18 @@ function ResetPasswordForm() {
     } catch (err) {
       console.error("Password reset error:", err);
       if (err.code === "auth/expired-action-code") {
-        setError("This password reset link has expired. Please request a new one.");
+        setError(
+          "This password reset link has expired. Please request a new one."
+        );
       } else if (err.code === "auth/invalid-action-code") {
-        setError("Invalid or already used reset link. Please request a new one.");
+        setError(
+          "Invalid or already used reset link. Please request a new one."
+        );
       } else {
-        setError(getAuthErrorMessage(err) || "Failed to reset password. Please try again.");
+        setError(
+          getAuthErrorMessage(err) ||
+            "Failed to reset password. Please try again."
+        );
       }
     } finally {
       setLoading(false);
@@ -87,7 +99,7 @@ function ResetPasswordForm() {
 
   // Show loading only if we're still checking (no error and no code yet)
   const isLoading = !oobCode && !error && searchParams.get("oobCode") === null;
-  
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -132,7 +144,11 @@ function ResetPasswordForm() {
             {/* Logo and Title */}
             <div className="text-center mb-4">
               <div className="flex flex-col items-center mb-3">
-                <Link href="/" className="mb-2" aria-label="Go to LocalLens homepage">
+                <Link
+                  href="/"
+                  className="mb-2"
+                  aria-label="Go to LocalLens homepage"
+                >
                   <div
                     className="w-16 h-16 rounded-full bg-linear-to-br from-cyan-500 via-blue-500 to-purple-600 flex items-center justify-center shadow-2xl mx-auto"
                     style={{
@@ -191,7 +207,8 @@ function ResetPasswordForm() {
                   />
                 </svg>
                 <span className="text-sm">
-                  Your password has been reset successfully. You will be redirected to the login page shortly.
+                  Your password has been reset successfully. You will be
+                  redirected to the login page shortly.
                 </span>
               </div>
             )}
@@ -215,8 +232,8 @@ function ResetPasswordForm() {
                 <div className="flex flex-col">
                   <span className="text-sm">{error}</span>
                   {!oobCode && (
-                    <Link 
-                      href="/forgot-password" 
+                    <Link
+                      href="/forgot-password"
                       className="text-sm underline mt-2 hover:text-cyan-400"
                     >
                       Request a new password reset link
@@ -231,7 +248,9 @@ function ResetPasswordForm() {
               <form onSubmit={handleSubmit} className="space-y-3">
                 <div className="form-control">
                   <label htmlFor="new-password" className="label pb-1.5">
-                    <span className="label-text text-white font-medium">New Password</span>
+                    <span className="label-text text-white font-medium">
+                      New Password
+                    </span>
                   </label>
                   <div className="relative">
                     <input
@@ -256,13 +275,40 @@ function ResetPasswordForm() {
                       aria-label="Press and hold to show password"
                     >
                       {showPassword ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.29 3.29m0 0L9.88 9.88m-3.59-3.59l3.29 3.29M12 12l.01.01M21 12l-3.29-3.29m0 0L15.12 9.88m3.59 3.59L15.12 15.12m0 0L12 12" />
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.29 3.29m0 0L9.88 9.88m-3.59-3.59l3.29 3.29M12 12l.01.01M21 12l-3.29-3.29m0 0L15.12 9.88m3.59 3.59L15.12 15.12m0 0L12 12"
+                          />
                         </svg>
                       ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                          />
                         </svg>
                       )}
                     </button>
@@ -270,8 +316,13 @@ function ResetPasswordForm() {
                 </div>
 
                 <div className="form-control">
-                  <label htmlFor="confirm-new-password" className="label pb-1.5">
-                    <span className="label-text text-white font-medium">Confirm New Password</span>
+                  <label
+                    htmlFor="confirm-new-password"
+                    className="label pb-1.5"
+                  >
+                    <span className="label-text text-white font-medium">
+                      Confirm New Password
+                    </span>
                   </label>
                   <div className="relative">
                     <input
@@ -296,13 +347,40 @@ function ResetPasswordForm() {
                       aria-label="Press and hold to show password"
                     >
                       {showConfirmPassword ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.29 3.29m0 0L9.88 9.88m-3.59-3.59l3.29 3.29M12 12l.01.01M21 12l-3.29-3.29m0 0L15.12 9.88m3.59 3.59L15.12 15.12m0 0L12 12" />
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.29 3.29m0 0L9.88 9.88m-3.59-3.59l3.29 3.29M12 12l.01.01M21 12l-3.29-3.29m0 0L15.12 9.88m3.59 3.59L15.12 15.12m0 0L12 12"
+                          />
                         </svg>
                       ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                          />
                         </svg>
                       )}
                     </button>
@@ -344,9 +422,14 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><span className="loading loading-spinner loading-lg text-cyan-400"></span></div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <span className="loading loading-spinner loading-lg text-cyan-400"></span>
+        </div>
+      }
+    >
       <ResetPasswordForm />
     </Suspense>
   );
 }
-

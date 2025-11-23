@@ -158,8 +158,8 @@ export default function ForgotPasswordPage() {
                   <span className="text-xs text-green-400/80">
                     If an account exists with this email and uses email/password
                     authentication, you will receive a password reset link
-                    shortly. If you signed up with Google, please use the "Sign in
-                    with Google" option instead.
+                    shortly. If you signed up with Google, please use the "Sign
+                    in with Google" option instead.
                   </span>
                 </div>
               </div>
