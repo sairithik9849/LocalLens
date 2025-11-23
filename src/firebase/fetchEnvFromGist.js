@@ -4,8 +4,9 @@
  */
 
 // Gist URL for fetching environment variables
-const GIST_URL = 'https://gist.githubusercontent.com/anikdoshi2003/39a8b7d85728126f27289840d825de5d/raw';
-const CACHE_KEY = 'firebase_env_cache';
+const GIST_URL =
+  "https://gist.githubusercontent.com/anikdoshi2003/39a8b7d85728126f27289840d825de5d/raw";
+const CACHE_KEY = "firebase_env_cache";
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 let cachedEnv = null;
@@ -16,13 +17,13 @@ let fetchPromise = null;
  */
 function parseEnvContent(content) {
   const envVars = {};
-  const lines = content.split('\n');
-  
+  const lines = content.split("\n");
+
   for (const line of lines) {
     const trimmed = line.trim();
     // Skip comments and empty lines
-    if (!trimmed || trimmed.startsWith('#')) continue;
-    
+    if (!trimmed || trimmed.startsWith("#")) continue;
+
     const match = trimmed.match(/^([^=]+)=(.*)$/);
     if (match) {
       const key = match[1].trim();
@@ -30,7 +31,7 @@ function parseEnvContent(content) {
       envVars[key] = value;
     }
   }
-  
+
   return envVars;
 }
 
@@ -39,7 +40,7 @@ function parseEnvContent(content) {
  */
 async function fetchEnvFromGist() {
   // Check cache first
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     try {
       const cached = localStorage.getItem(CACHE_KEY);
       if (cached) {
@@ -61,27 +62,30 @@ async function fetchEnvFromGist() {
   fetchPromise = (async () => {
     try {
       if (!GIST_URL) {
-        throw new Error('Gist URL not configured');
+        throw new Error("Gist URL not configured");
       }
-      
+
       const response = await fetch(GIST_URL);
-      if (!response.ok) throw new Error('Failed to fetch Gist');
-      
+      if (!response.ok) throw new Error("Failed to fetch Gist");
+
       const content = await response.text();
       const envVars = parseEnvContent(content);
-      
+
       // Cache the result
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         try {
-          localStorage.setItem(CACHE_KEY, JSON.stringify({
-            data: envVars,
-            timestamp: Date.now()
-          }));
+          localStorage.setItem(
+            CACHE_KEY,
+            JSON.stringify({
+              data: envVars,
+              timestamp: Date.now(),
+            })
+          );
         } catch (e) {
           // Ignore localStorage errors
         }
       }
-      
+
       return envVars;
     } catch (error) {
       return null;
@@ -103,7 +107,7 @@ export async function getEnvVar(key) {
   }
 
   // Try to fetch from Gist (client-side only)
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     try {
       const gistEnv = await fetchEnvFromGist();
       if (gistEnv && gistEnv[key]) {
@@ -139,17 +143,29 @@ export async function getFirebaseEnv() {
   }
 
   // Try to fetch from Gist (client-side only)
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     try {
       const gistEnv = await fetchEnvFromGist();
       if (gistEnv) {
         return {
-          apiKey: gistEnv.NEXT_PUBLIC_FIREBASE_API_KEY || process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-          authDomain: gistEnv.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-          projectId: gistEnv.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-          storageBucket: gistEnv.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-          messagingSenderId: gistEnv.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-          appId: gistEnv.NEXT_PUBLIC_FIREBASE_APP_ID || process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+          apiKey:
+            gistEnv.NEXT_PUBLIC_FIREBASE_API_KEY ||
+            process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+          authDomain:
+            gistEnv.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ||
+            process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+          projectId:
+            gistEnv.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
+            process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+          storageBucket:
+            gistEnv.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ||
+            process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+          messagingSenderId:
+            gistEnv.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ||
+            process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+          appId:
+            gistEnv.NEXT_PUBLIC_FIREBASE_APP_ID ||
+            process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
         };
       }
     } catch (error) {
@@ -167,4 +183,3 @@ export async function getFirebaseEnv() {
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
   };
 }
-

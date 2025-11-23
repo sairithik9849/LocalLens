@@ -38,7 +38,7 @@ if (firebaseConfig) {
     app = apps[0];
   }
   auth = getAuth(app);
-} else if (typeof window !== 'undefined') {
+} else if (typeof window !== "undefined") {
   // Client-side: Need to fetch from Gist
   // We'll initialize Firebase asynchronously in a client component
   // For now, export null - will be initialized in AuthContext
