@@ -28,7 +28,7 @@ export function AuthProvider({ children }) {
     const initialize = async () => {
       try {
         let currentAuth = auth;
-        
+
         // If auth is not available (no .env.local), fetch from Gist and initialize
         if (!currentAuth) {
           // Check if Firebase is already initialized
@@ -38,10 +38,12 @@ export function AuthProvider({ children }) {
           } else {
             // Fetch config from Gist
             const config = await getFirebaseEnv();
-            
+
             // Validate config
             if (!config.apiKey || !config.authDomain || !config.projectId) {
-              throw new Error('Firebase configuration is incomplete. Please check your Gist or .env.local file.');
+              throw new Error(
+                "Firebase configuration is incomplete. Please check your Gist or .env.local file."
+              );
             }
 
             // Initialize Firebase
@@ -51,7 +53,9 @@ export function AuthProvider({ children }) {
         }
 
         if (!currentAuth) {
-          throw new Error('Failed to initialize Firebase auth. Please check your Gist or .env.local file.');
+          throw new Error(
+            "Failed to initialize Firebase auth. Please check your Gist or .env.local file."
+          );
         }
 
         setAuthInstance(currentAuth);
@@ -100,9 +104,10 @@ export function AuthProvider({ children }) {
     const currentAuth = getAuthInstance();
     // Configure where users should be redirected after resetting password
     const actionCodeSettings = {
-      url: typeof window !== 'undefined' 
-        ? `${window.location.origin}/reset-password`
-        : 'http://localhost:3000/reset-password',
+      url:
+        typeof window !== "undefined"
+          ? `${window.location.origin}/reset-password`
+          : "http://localhost:3000/reset-password",
       handleCodeInApp: true, // Set to true to handle in our custom page
     };
     await sendPasswordResetEmail(currentAuth, email, actionCodeSettings);
@@ -134,4 +139,3 @@ export function useAuth() {
   }
   return context;
 }
-
