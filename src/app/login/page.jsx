@@ -13,15 +13,16 @@ function LoginForm() {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { login, signInWithGoogle, user } = useAuth();
+  const { login, signInWithGoogle, user, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    if (user) {
-      router.push("/dashboard");
+    // Redirect authenticated users away from login page
+    if (!authLoading && user) {
+      router.replace("/dashboard");
     }
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
   // Check for password reset success (separate effect to avoid loop)
   useEffect(() => {
@@ -43,10 +44,12 @@ function LoginForm() {
 
     try {
       await login(email, password);
+      // Redirect to dashboard - it will check profile completeness and redirect to setup if needed
       router.push("/dashboard");
     } catch (err) {
       setError(getAuthErrorMessage(err));
     } finally {
+      // Always reset loading state, even if navigation succeeds or fails
       setLoading(false);
     }
   };
@@ -57,10 +60,12 @@ function LoginForm() {
 
     try {
       await signInWithGoogle();
+      // Redirect to dashboard - it will check profile completeness and redirect to setup if needed
       router.push("/dashboard");
     } catch (err) {
       setError(getAuthErrorMessage(err));
     } finally {
+      // Always reset loading state, even if navigation succeeds or fails
       setLoading(false);
     }
   };

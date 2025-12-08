@@ -1,19 +1,101 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/firebase/AuthContext";
+import { isProfileComplete } from "@/lib/userProfileCheck.js";
 
 export default function DashboardPage() {
-  const { user, loading, logout } = useAuth();
+  const { user, userProfile, loading, logout } = useAuth();
   const router = useRouter();
+  const [checkingProfile, setCheckingProfile] = useState(true);
+  // Use userProfile from AuthContext directly - it's reactive and updates automatically
 
   useEffect(() => {
     if (!loading && !user) {
       router.push("/login");
+      return;
     }
-  }, [user, loading, router]);
+
+    // Check profile completeness once user is loaded
+    // Always fetch fresh profile data to avoid stale state
+    if (user && !loading) {
+      const checkProfile = async () => {
+        try {
+          // Get Firebase ID token for authentication
+          const { auth } = await import('@/firebase/config');
+          const { getAuth } = await import('firebase/auth');
+          const currentAuth = auth || getAuth();
+          const idToken = currentAuth?.currentUser ? await currentAuth.currentUser.getIdToken() : null;
+
+          const headers = {};
+          if (idToken) {
+            headers['Authorization'] = `Bearer ${idToken}`;
+          }
+
+          const response = await fetch(`/api/users/profile?uid=${encodeURIComponent(user.uid)}`, {
+            headers: headers
+          });
+          
+          if (response.ok) {
+            let data = {};
+            try {
+              const contentType = response.headers.get('content-type');
+              if (contentType && contentType.includes('application/json')) {
+                data = await response.json();
+              } else {
+                throw new Error('Invalid response format');
+              }
+            } catch (parseError) {
+              console.error('Error parsing profile response:', parseError);
+              router.replace("/setup");
+              return;
+            }
+            
+            // Check if user is banned
+            if (data.user?.moderation?.banned === true) {
+              // Redirect to a banned page or show error
+              router.replace("/banned");
+              return;
+            }
+            
+            const { isComplete, missingFields } = isProfileComplete(data.user);
+            
+            if (!isComplete) {
+              router.replace("/setup");
+              return;
+            }
+          } else {
+            let errorData = {};
+            try {
+              const contentType = response.headers.get('content-type');
+              if (contentType && contentType.includes('application/json')) {
+                errorData = await response.json();
+              } else {
+                errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
+              }
+            } catch (parseError) {
+              console.error('Error parsing error response:', parseError);
+              errorData = { error: `HTTP ${response.status}: Failed to fetch profile` };
+            }
+            console.error('Dashboard: Profile fetch failed:', errorData);
+            // If profile fetch fails, redirect to setup
+            router.replace("/setup");
+            return;
+          }
+        } catch (error) {
+          console.error('Dashboard: Error checking profile:', error);
+          // On error, redirect to setup to be safe
+          router.replace("/setup");
+          return;
+        } finally {
+          setCheckingProfile(false);
+        }
+      };
+      checkProfile();
+    }
+  }, [user, loading, router]); // Removed userProfile from dependencies to avoid infinite loops
 
   const handleLogout = async () => {
     try {
@@ -24,7 +106,7 @@ export default function DashboardPage() {
     }
   };
 
-  if (loading) {
+  if (loading || checkingProfile) {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
@@ -112,6 +194,12 @@ export default function DashboardPage() {
             </Link>
           </div>
           <div className="flex-none flex items-center gap-3 ml-auto">
+            <Link
+              href="/profile"
+              className="btn btn-sm md:btn-md transition-all duration-300 font-medium border-2 border-cyan-400/50 hover:border-cyan-400 hover:bg-cyan-400/10 hover:scale-105 hover:shadow-lg hover:shadow-cyan-400/20 bg-transparent text-white"
+            >
+              Profile
+            </Link>
             <button
               onClick={handleLogout}
               className="btn btn-sm md:btn-md transition-all duration-300 font-medium border-2 border-cyan-400/50 hover:border-cyan-400 hover:bg-cyan-400/10 hover:scale-105 hover:shadow-lg hover:shadow-cyan-400/20 bg-transparent text-white"
@@ -135,16 +223,23 @@ export default function DashboardPage() {
           >
             <div className="card-body">
               <div className="flex items-center gap-4 mb-4">
-                <div className="avatar placeholder">
+                {userProfile?.photoURL ? (
+                  <img
+                    src={userProfile.photoURL}
+                    alt="Profile"
+                    className="w-16 h-16 rounded-full border-2 shadow-lg object-cover"
+                    style={{ borderColor: "rgba(34, 211, 238, 0.6)" }}
+                  />
+                ) : (
                   <div
-                    className="bg-linear-to-br from-cyan-500 via-blue-500 to-purple-600 text-white rounded-full w-16 h-16 shadow-lg border-2"
+                    className="bg-linear-to-br from-cyan-500 via-blue-500 to-purple-600 text-white rounded-full w-16 h-16 shadow-lg border-2 flex items-center justify-center"
                     style={{ borderColor: "rgba(34, 211, 238, 0.6)" }}
                   >
-                    <span className="text-2xl">
-                      {user.email ? user.email.charAt(0).toUpperCase() : "U"}
+                    <span className="text-2xl font-bold">
+                      {userProfile?.firstName?.[0]?.toUpperCase() || userProfile?.lastName?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
                     </span>
                   </div>
-                </div>
+                )}
                 <div>
                   <h1 className="text-3xl font-bold bg-linear-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
                     Welcome to LocalLens
@@ -188,12 +283,6 @@ export default function DashboardPage() {
                   <p className="text-white/60 text-sm">Email</p>
                   <p className="text-white font-medium">{user.email}</p>
                 </div>
-                {user.displayName && (
-                  <div>
-                    <p className="text-white/60 text-sm">Display Name</p>
-                    <p className="text-white font-medium">{user.displayName}</p>
-                  </div>
-                )}
                 <div>
                   <p className="text-white/60 text-sm">User ID</p>
                   <p className="text-white font-mono text-xs break-all">

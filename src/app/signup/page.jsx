@@ -9,6 +9,7 @@ import {
   validatePassword,
   getPasswordRequirementsMessage,
 } from "@/firebase/passwordValidation";
+import { isProfileComplete } from "@/lib/userProfileCheck.js";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
@@ -18,14 +19,15 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { signup, signInWithGoogle, user } = useAuth();
+  const { signup, signInWithGoogle, user, loading: authLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (user) {
-      router.push("/dashboard");
+    // Redirect authenticated users away from signup page
+    if (!authLoading && user) {
+      router.replace("/dashboard");
     }
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -48,10 +50,10 @@ export default function SignupPage() {
 
     try {
       await signup(email, password);
+      // Redirect to dashboard - it will check profile completeness and redirect to setup if needed
       router.push("/dashboard");
     } catch (err) {
       setError(getAuthErrorMessage(err));
-    } finally {
       setLoading(false);
     }
   };
@@ -62,10 +64,10 @@ export default function SignupPage() {
 
     try {
       await signInWithGoogle();
+      // Redirect to dashboard - it will check profile completeness and redirect to setup if needed
       router.push("/dashboard");
     } catch (err) {
       setError(getAuthErrorMessage(err));
-    } finally {
       setLoading(false);
     }
   };

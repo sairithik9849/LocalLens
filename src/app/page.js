@@ -8,6 +8,7 @@ import { useAuth } from "@/firebase/AuthContext";
 export default function Home() {
   const [scrollY, setScrollY] = useState(0);
   const [revealedSections, setRevealedSections] = useState(new Set());
+  const [profileData, setProfileData] = useState(null);
   const { user, loading, logout } = useAuth();
   const router = useRouter();
 
@@ -27,6 +28,46 @@ export default function Home() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Fetch user profile when user is logged in
+  useEffect(() => {
+    if (user && !loading) {
+      const fetchProfile = async () => {
+        try {
+          // Get Firebase ID token for authentication
+          const { auth } = await import('@/firebase/config');
+          const { getAuth } = await import('firebase/auth');
+          const currentAuth = auth || getAuth();
+          const idToken = currentAuth?.currentUser ? await currentAuth.currentUser.getIdToken() : null;
+
+          const headers = {};
+          if (idToken) {
+            headers['Authorization'] = `Bearer ${idToken}`;
+          }
+
+          const response = await fetch(`/api/users/profile?uid=${encodeURIComponent(user.uid)}`, {
+            headers: headers
+          });
+          if (response.ok) {
+            try {
+              const contentType = response.headers.get('content-type');
+              if (contentType && contentType.includes('application/json')) {
+                const data = await response.json();
+                setProfileData(data.user);
+              }
+            } catch (parseError) {
+              console.error('Error parsing profile response:', parseError);
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
+        }
+      };
+      fetchProfile();
+    } else {
+      setProfileData(null);
+    }
+  }, [user, loading]);
 
   useEffect(() => {
     const observerOptions = {
@@ -121,13 +162,19 @@ export default function Home() {
             ) : user ? (
               <>
                 <div className="flex items-center gap-3">
-                  <div className="avatar placeholder">
-                    <div className="bg-linear-to-br from-cyan-500 via-blue-500 to-purple-600 text-white rounded-full w-10 h-10 border-2 border-cyan-400/50">
-                      <span className="text-sm">
-                        {user.email ? user.email.charAt(0).toUpperCase() : "U"}
+                  {profileData?.photoURL ? (
+                    <img
+                      src={profileData.photoURL}
+                      alt="Profile"
+                      className="w-10 h-10 rounded-full border-2 border-cyan-400/50 object-cover"
+                    />
+                  ) : (
+                    <div className="bg-linear-to-br from-cyan-500 via-blue-500 to-purple-600 text-white rounded-full w-10 h-10 border-2 border-cyan-400/50 flex items-center justify-center">
+                      <span className="text-sm font-bold">
+                        {profileData?.firstName?.[0]?.toUpperCase() || profileData?.lastName?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
                       </span>
                     </div>
-                  </div>
+                  )}
                   <Link 
                     href="/dashboard" 
                     className="btn btn-sm md:btn-md transition-all duration-300 font-medium border-2 border-cyan-400 hover:border-cyan-300 hover:bg-cyan-400/20 hover:scale-105 hover:shadow-lg hover:shadow-cyan-400/20 bg-transparent text-white"
