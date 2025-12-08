@@ -344,13 +344,19 @@ export default function ProfilePage() {
         setSuccess("Profile updated successfully!");
         setIsEditing(false);
         
-        // Refresh user profile in context
-        if (refreshUserProfile) {
-          await refreshUserProfile();
-        }
-        
-        // Reload profile data
-        await fetchUserProfile();
+        // Update local state with the new values
+        setUserProfile({
+          ...userProfile,
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          profile: {
+            ...userProfile.profile,
+            pincode: pincodeValidation.formatted,
+            city: city.trim(),
+            bio: bioValidation.sanitized || null,
+            favoriteQuote: favoriteQuoteValidation.sanitized || null,
+          }
+        });
         
         // Clear success message after 3 seconds
         setTimeout(() => setSuccess(""), 3000);
