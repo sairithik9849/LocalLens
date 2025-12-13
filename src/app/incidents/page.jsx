@@ -78,18 +78,61 @@ export default function IncidentsPage() {
 
         setPincode(userPincode);
 
-        // Geocode pincode to get coordinates
+        // Try to use RabbitMQ queue for geocoding
         let coords;
+        try {
+          // Publish geocoding job to queue
+          const geocodeResponse = await fetch(`/api/geocoding/coords?pincode=${encodeURIComponent(userPincode)}`);
+          const geocodeData = await geocodeResponse.json();
+
+          if (geocodeResponse.status === 202 && geocodeData.jobId) {
+            // Job queued, poll for result
+            console.log('[Incidents] Geocoding job queued, polling for result...');
+            const jobId = geocodeData.jobId;
+            let attempts = 0;
+            const maxAttempts = 30; // 30 seconds max wait
+            let result = null;
+
+            while (attempts < maxAttempts && !result) {
+              await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+              
+              const statusResponse = await fetch(`/api/geocoding/status/${jobId}`);
+              const statusData = await statusResponse.json();
+
+              if (statusData.status === 'completed' && statusData.result) {
+                result = statusData.result;
+                coords = { lat: result.lat, lng: result.lng };
+                break;
+              } else if (statusData.status === 'failed') {
+                throw new Error(statusData.error || 'Geocoding failed');
+              }
+
+              attempts++;
+            }
+
+            if (!coords) {
+              throw new Error('Geocoding timeout - job did not complete in time');
+            }
+          } else if (geocodeData.lat && geocodeData.lng) {
+            // Direct result (fallback mode)
+            coords = { lat: geocodeData.lat, lng: geocodeData.lng };
+          } else {
+            throw new Error('Invalid geocoding response');
+          }
+        } catch (queueError) {
+          // Queue unavailable or failed, fallback to direct geocoding
+          console.warn('Queue geocoding failed, using direct geocoding:', queueError.message);
         try {
           const apiKey = await getGoogleMapsApiKey();
           coords = await zipcodeToCoordsGoogle(userPincode, apiKey);
         } catch (error) {
           console.warn('Google geocoding failed, trying OpenStreetMap:', error);
-          try {
+            try {
           coords = await zipcodeToCoords(userPincode);
-          } catch (osmError) {
-            console.error('Both geocoding services failed:', osmError);
-            throw new Error('Failed to geocode pincode. Please check your pincode and try again.');
+            } catch (osmError) {
+              console.error('Both geocoding services failed:', osmError);
+              throw new Error('Failed to geocode pincode. Please check your pincode and try again.');
+            }
           }
         }
 

@@ -117,7 +117,40 @@ export default function SetupPage() {
           return;
         }
         
-        if (response.ok && data.city) {
+        // Handle async queue response (202 Accepted)
+        if (response.status === 202 && data.jobId) {
+          // Job queued, poll for result
+          const jobId = data.jobId;
+          let attempts = 0;
+          const maxAttempts = 20; // 20 seconds max wait
+          let result = null;
+
+          while (attempts < maxAttempts && !result) {
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+            
+            const statusResponse = await fetch(`/api/geocoding/status/${jobId}`);
+            const statusData = await statusResponse.json();
+
+            if (statusData.status === 'completed' && statusData.result?.city) {
+              result = statusData.result.city;
+              setCity(result);
+              setError('');
+              break;
+            } else if (statusData.status === 'failed') {
+              setCity('');
+              setError('City not found automatically. Please enter manually.');
+              break;
+            }
+
+            attempts++;
+          }
+
+          if (!result && attempts >= maxAttempts) {
+            setCity('');
+            setError('City lookup timed out. Please enter manually.');
+          }
+        } else if (response.ok && data.city) {
+          // Direct result (fallback mode)
           setCity(data.city);
           setError('');
         } else {
