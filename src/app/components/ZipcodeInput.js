@@ -14,9 +14,17 @@ const ZipcodeInput = ({ onZipcodeChange, defaultZipcode = '' }) => {
     if (typeof window === 'undefined') return;
     
     const checkGoogleMaps = () => {
-      if (window.google && window.google.maps && window.google.maps.places) {
-        setIsGoogleMapsLoaded(true);
-        return true;
+      try {
+        if (window.google && 
+            window.google.maps && 
+            window.google.maps.places &&
+            window.google.maps.places.Autocomplete) {
+          setIsGoogleMapsLoaded(true);
+          return true;
+        }
+      } catch (error) {
+        // Silently fail if google is not ready
+        return false;
       }
       return false;
     };
@@ -33,8 +41,16 @@ const ZipcodeInput = ({ onZipcodeChange, defaultZipcode = '' }) => {
       }
     }, 100);
 
+    // Stop polling after 10 seconds to avoid infinite polling
+    const timeout = setTimeout(() => {
+      clearInterval(interval);
+    }, 10000);
+
     // Cleanup
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
   }, []);
 
   useEffect(() => {
@@ -43,50 +59,70 @@ const ZipcodeInput = ({ onZipcodeChange, defaultZipcode = '' }) => {
       return;
     }
 
+    // Double-check that Google Maps Places API is actually available
+    if (!window.google || !window.google.maps || !window.google.maps.places) {
+      console.warn('Google Maps Places API not yet available');
+      return;
+    }
+
     // Initialize Google Places Autocomplete restricted to postal codes only
-    const autocomplete = new window.google.maps.places.Autocomplete(
-      inputRef.current,
-      {
-        types: ['postal_code'],
-        componentRestrictions: { country: 'us' },
-        fields: ['address_components', 'geometry', 'formatted_address'],
-      }
-    );
-
-    autocomplete.addListener('place_changed', () => {
-      const place = autocomplete.getPlace();
-      
-      if (!place.geometry) {
-        return;
-      }
-      
-      // Extract zipcode from address components
-      const zipcodeComponent = place.address_components?.find(
-        (component) => component.types.includes('postal_code')
+    let autocomplete;
+    try {
+      autocomplete = new window.google.maps.places.Autocomplete(
+        inputRef.current,
+        {
+          types: ['postal_code'],
+          componentRestrictions: { country: 'us' },
+          fields: ['address_components', 'geometry', 'formatted_address'],
+        }
       );
-      
-      if (!zipcodeComponent) {
-        return;
-      }
-      
-      const newZipcode = zipcodeComponent.long_name;
-      setZipcode(newZipcode);
-      
-      // Pass the place object so we can get viewport/bounds for proper zooming
-      // Wrap in try-catch to prevent crashes
-      try {
-        onZipcodeChange(newZipcode, place.geometry.location, place.geometry.viewport);
-      } catch (error) {
-        console.error('Error handling zipcode change:', error);
-      }
-    });
+    } catch (error) {
+      console.error('Error creating Autocomplete:', error);
+      return;
+    }
 
-    autocompleteRef.current = autocomplete;
+    if (autocomplete) {
+      autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
+        
+        if (!place.geometry) {
+          return;
+        }
+        
+        // Extract zipcode from address components
+        const zipcodeComponent = place.address_components?.find(
+          (component) => component.types.includes('postal_code')
+        );
+        
+        if (!zipcodeComponent) {
+          return;
+        }
+        
+        const newZipcode = zipcodeComponent.long_name;
+        setZipcode(newZipcode);
+        
+        // Pass the place object so we can get viewport/bounds for proper zooming
+        // Wrap in try-catch to prevent crashes
+        try {
+          onZipcodeChange(newZipcode, place.geometry.location, place.geometry.viewport);
+        } catch (error) {
+          console.error('Error handling zipcode change:', error);
+        }
+      });
+
+      autocompleteRef.current = autocomplete;
+    }
 
     // Cleanup
     return () => {
-      if (autocompleteRef.current) {
-        window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
+      if (autocompleteRef.current && window.google && window.google.maps && window.google.maps.event) {
+        try {
+          window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
+        } catch (error) {
+          console.warn('Error clearing autocomplete listeners:', error);
+        }
+        autocompleteRef.current = null;
+      } else if (autocompleteRef.current) {
         autocompleteRef.current = null;
       }
     };

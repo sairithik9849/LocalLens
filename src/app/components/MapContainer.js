@@ -1,8 +1,11 @@
 'use client';
 
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
+import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import { getGoogleMapsApiKey } from '@/lib/gistApiKey';
+
+// Static libraries array to prevent LoadScript reload
+const libraries = ['places'];
 
 const MapContainer = ({ center, zoom, viewportBounds, filters }) => {
   const mapRef = useRef(null);
@@ -67,11 +70,8 @@ const MapContainer = ({ center, zoom, viewportBounds, filters }) => {
     ],
   }), []);
 
-  const libraries = useMemo(() => ['places'], []);
-
   // Dummy markers for demonstration
   const dummyMarkers = [
-
     {
       id: 2,
       position: { lat: center.lat - 0.01, lng: center.lng - 0.01 },
