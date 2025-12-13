@@ -17,7 +17,8 @@ const dbConnection = async () => {
     if (!uri) {
       throw new Error('MongoDB URI is not configured. Failed to fetch from Gist. Please ensure Gist is accessible.');
     }
-    _connection = await MongoClient.connect(uri);
+    const client = new MongoClient(uri);
+    _connection = await client.connect();
     _db = _connection.db(mongoConfig.database);
   }
 

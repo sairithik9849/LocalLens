@@ -74,37 +74,9 @@ export default function SignupPage() {
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center relative"
-      style={{ background: "transparent" }}
-    >
-      {/* Background matching homepage */}
-      <div
-        className="fixed inset-0 w-full h-full"
-        style={{
-          backgroundImage: `url('https://plus.unsplash.com/premium_photo-1714051660720-888e8454a021?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8bmV3JTIweW9ya3xlbnwwfHwwfHx8MA%3D%3D')`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-          backgroundAttachment: "fixed",
-          zIndex: -2,
-        }}
-      />
-      <div
-        className="fixed inset-0 w-full h-full"
-        style={{
-          background:
-            "linear-gradient(to bottom, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.3) 30%, rgba(0, 0, 0, 0.25) 60%, rgba(0, 0, 0, 0.2) 100%)",
-          zIndex: -1,
-          pointerEvents: "none",
-        }}
-      />
-
-      <div className="w-full max-w-md mx-auto px-4 z-10 py-8">
-        <div
-          className="card shadow-2xl backdrop-blur-lg border border-gray-700/50"
-          style={{ backgroundColor: "rgba(15, 23, 42, 0.85)" }}
-        >
+    <div className="min-h-screen flex items-center justify-center bg-base-200">
+      <div className="w-full max-w-md mx-auto px-4 py-8">
+        <div className="card shadow-2xl bg-base-100 border border-base-300">
           <div className="card-body p-6">
             {/* Logo and Title */}
             <div className="text-center mb-4">
@@ -144,11 +116,11 @@ export default function SignupPage() {
                     </svg>
                   </div>
                 </Link>
-                <h1 className="text-3xl font-bold bg-linear-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
+                <h1 className="text-3xl font-bold text-base-content">
                   Create Account
                 </h1>
               </div>
-              <p className="text-white/70 mt-1">
+              <p className="text-base-content/70 mt-1">
                 Join LocalLens and explore your neighborhood
               </p>
             </div>
@@ -178,7 +150,7 @@ export default function SignupPage() {
               type="button"
               onClick={handleGoogleSignIn}
               disabled={loading}
-              className="btn w-full mb-3 bg-slate-800/80 hover:bg-slate-700/80 border-2 border-slate-600/50 text-white font-medium shadow-sm hover:shadow-md transition-all"
+              className="btn btn-outline w-full mb-3 font-medium"
             >
               {loading ? (
                 <span className="loading loading-spinner loading-sm text-white"></span>
@@ -207,13 +179,13 @@ export default function SignupPage() {
               )}
             </button>
 
-            <div className="divider text-white/50 my-4">OR</div>
+            <div className="divider my-4">OR</div>
 
             {/* Email/Password Form */}
             <form onSubmit={handleSubmit} className="space-y-3">
               <div className="form-control">
                 <label htmlFor="signup-email" className="label pb-1.5">
-                  <span className="label-text text-white font-medium">
+                  <span className="label-text font-medium">
                     Email
                   </span>
                 </label>
@@ -221,7 +193,7 @@ export default function SignupPage() {
                   id="signup-email"
                   type="email"
                   placeholder="Enter your email"
-                  className="input input-bordered w-full bg-slate-900/80 border-slate-600/50 text-white placeholder:text-gray-500 focus:border-cyan-400 focus:outline-none focus:bg-slate-900"
+                  className="input input-bordered w-full"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -231,7 +203,7 @@ export default function SignupPage() {
 
               <div className="form-control">
                 <label htmlFor="signup-password" className="label pb-1.5">
-                  <span className="label-text text-white font-medium">
+                  <span className="label-text font-medium">
                     Password
                   </span>
                 </label>
@@ -240,7 +212,7 @@ export default function SignupPage() {
                     id="signup-password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Min. 8 chars: uppercase, lowercase, number, symbol"
-                    className="input input-bordered w-full bg-slate-900/80 border-slate-600/50 text-white placeholder:text-gray-500 focus:border-cyan-400 focus:outline-none focus:bg-slate-900 pr-12"
+                    className="input input-bordered w-full pr-12"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -248,7 +220,7 @@ export default function SignupPage() {
                   />
                   <button
                     type="button"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-base-content/50 hover:text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     onMouseDown={() => setShowPassword(true)}
                     onMouseUp={() => setShowPassword(false)}
                     onMouseLeave={() => setShowPassword(false)}
@@ -303,7 +275,7 @@ export default function SignupPage() {
                   htmlFor="signup-confirm-password"
                   className="label pb-1.5"
                 >
-                  <span className="label-text text-white font-medium">
+                  <span className="label-text font-medium">
                     Confirm Password
                   </span>
                 </label>
@@ -312,7 +284,7 @@ export default function SignupPage() {
                     id="signup-confirm-password"
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="Confirm your password"
-                    className="input input-bordered w-full bg-slate-900/80 border-slate-600/50 text-white placeholder:text-gray-500 focus:border-cyan-400 focus:outline-none focus:bg-slate-900 pr-12"
+                    className="input input-bordered w-full pr-12"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
@@ -320,7 +292,7 @@ export default function SignupPage() {
                   />
                   <button
                     type="button"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-base-content/50 hover:text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     onMouseDown={() => setShowConfirmPassword(true)}
                     onMouseUp={() => setShowConfirmPassword(false)}
                     onMouseLeave={() => setShowConfirmPassword(false)}
@@ -373,7 +345,7 @@ export default function SignupPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="btn w-full text-white border-none font-semibold hover:scale-105 transition-transform bg-slate-800 hover:bg-slate-700"
+                className="btn btn-primary w-full font-semibold hover:scale-105 transition-transform"
               >
                 {loading ? (
                   <span className="loading loading-spinner loading-sm"></span>
@@ -385,11 +357,11 @@ export default function SignupPage() {
 
             {/* Sign In Link */}
             <div className="text-center mt-4">
-              <p className="text-white/70">
+              <p className="text-base-content/70">
                 Already have an account?{" "}
                 <Link
                   href="/login"
-                  className="link link-hover text-cyan-400 hover:text-cyan-300"
+                  className="link link-hover text-primary hover:text-primary-focus"
                 >
                   Sign in
                 </Link>
@@ -400,7 +372,7 @@ export default function SignupPage() {
             <div className="text-center mt-3">
               <Link
                 href="/"
-                className="btn btn-ghost btn-sm text-white/70 hover:text-white hover:bg-slate-700/50"
+                className="btn btn-ghost btn-sm"
               >
                 ← Back to home
               </Link>

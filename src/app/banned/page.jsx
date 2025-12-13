@@ -26,44 +26,16 @@ export default function BannedPage() {
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center relative"
-      style={{ background: "transparent" }}
-    >
-      {/* Background matching homepage */}
-      <div
-        className="fixed inset-0 w-full h-full"
-        style={{
-          backgroundImage: `url('https://plus.unsplash.com/premium_photo-1714051660720-888e8454a021?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8bmV3JTIweW9ya3xlbnwwfHwwfHx8MA%3D%3D')`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-          backgroundAttachment: "fixed",
-          zIndex: -2,
-        }}
-      />
-      <div
-        className="fixed inset-0 w-full h-full"
-        style={{
-          background:
-            "linear-gradient(to bottom, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.3) 30%, rgba(0, 0, 0, 0.25) 60%, rgba(0, 0, 0, 0.2) 100%)",
-          zIndex: -1,
-          pointerEvents: "none",
-        }}
-      />
-
-      <div className="w-full max-w-md mx-auto px-4 z-10">
-        <div
-          className="card shadow-2xl backdrop-blur-lg border border-red-500/50"
-          style={{ backgroundColor: "rgba(15, 23, 42, 0.85)" }}
-        >
+    <div className="min-h-screen flex items-center justify-center bg-base-200">
+      <div className="w-full max-w-md mx-auto px-4">
+        <div className="card shadow-2xl bg-base-100 border border-error">
           <div className="card-body p-6 text-center">
             {/* Error Icon */}
             <div className="flex justify-center mb-4">
-              <div className="w-20 h-20 rounded-full bg-red-500/20 flex items-center justify-center border-2 border-red-500/50">
+              <div className="w-20 h-20 rounded-full bg-error/20 flex items-center justify-center border-2 border-error">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-12 w-12 text-red-400"
+                  className="h-12 w-12 text-error"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -79,23 +51,23 @@ export default function BannedPage() {
             </div>
 
             {/* Title */}
-            <h1 className="text-3xl font-bold text-red-400 mb-2">
+            <h1 className="text-3xl font-bold text-error mb-2">
               Account Banned
             </h1>
 
             {/* Message */}
-            <p className="text-white/80 mb-6">
+            <p className="text-base-content/70 mb-6">
               Your account has been banned and you no longer have access to LocalLens.
             </p>
 
-            <p className="text-white/60 text-sm mb-6">
+            <p className="text-base-content/60 text-sm mb-6">
               If you believe this is an error, please contact support.
             </p>
 
             {/* Logout Button */}
             <button
               onClick={handleLogout}
-              className="btn w-full text-white border-2 border-red-500/50 bg-red-500/20 hover:bg-red-500/30 hover:border-red-400 font-semibold"
+              className="btn btn-error w-full font-semibold"
             >
               Sign Out
             </button>
@@ -104,7 +76,7 @@ export default function BannedPage() {
             <div className="mt-4">
               <Link
                 href="/"
-                className="btn btn-ghost btn-sm text-white/70 hover:text-white hover:bg-slate-700/50"
+                className="btn btn-ghost btn-sm"
               >
                 ← Back to home
               </Link>

@@ -375,12 +375,11 @@ export default function ProfilePage() {
   if (authLoading || loading) {
     return (
       <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ background: "transparent" }}
+        className="min-h-screen flex items-center justify-center bg-base-200"
       >
         <div className="text-center">
-          <span className="loading loading-spinner loading-lg text-cyan-400"></span>
-          <p className="text-white mt-4">
+          <span className="loading loading-spinner loading-lg text-primary"></span>
+          <p className="text-base-content mt-4">
             {authLoading ? "Checking authentication..." : "Loading profile..."}
           </p>
         </div>
@@ -397,12 +396,11 @@ export default function ProfilePage() {
   if (!userProfile) {
     return (
       <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ background: "transparent" }}
+        className="min-h-screen flex items-center justify-center bg-base-200"
       >
         <div className="text-center">
-          <span className="loading loading-spinner loading-lg text-cyan-400"></span>
-          <p className="text-white mt-4">Loading profile...</p>
+          <span className="loading loading-spinner loading-lg text-primary"></span>
+          <p className="text-base-content mt-4">Loading profile...</p>
         </div>
       </div>
     );
@@ -423,37 +421,9 @@ export default function ProfilePage() {
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center relative py-8"
-      style={{ background: "transparent" }}
-    >
-      {/* Background matching homepage */}
-      <div
-        className="fixed inset-0 w-full h-full"
-        style={{
-          backgroundImage: `url('https://plus.unsplash.com/premium_photo-1714051660720-888e8454a021?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8bmV3JTIweW9ya3xlbnwwfHwwfHx8MA%3D%3D')`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-          backgroundAttachment: "fixed",
-          zIndex: -2,
-        }}
-      />
-      <div
-        className="fixed inset-0 w-full h-full"
-        style={{
-          background:
-            "linear-gradient(to bottom, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.3) 30%, rgba(0, 0, 0, 0.25) 60%, rgba(0, 0, 0, 0.2) 100%)",
-          zIndex: -1,
-          pointerEvents: "none",
-        }}
-      />
-
-      <div className="w-full max-w-2xl mx-auto px-4 z-10">
-        <div
-          className="card shadow-2xl backdrop-blur-lg border border-gray-700/50"
-          style={{ backgroundColor: "rgba(15, 23, 42, 0.85)" }}
-        >
+    <div className="min-h-screen flex items-center justify-center bg-base-200 py-8">
+      <div className="w-full max-w-2xl mx-auto px-4">
+        <div className="card shadow-2xl bg-base-100 border border-base-300">
           <div className="card-body p-6">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
@@ -462,28 +432,28 @@ export default function ProfilePage() {
                   <img
                     src={userProfile.photoURL}
                     alt="Profile"
-                    className="w-16 h-16 rounded-full border-2 border-cyan-400 object-cover"
+                    className="w-16 h-16 rounded-full border-2 border-primary object-cover"
                   />
                 ) : (
-                  <div className="w-16 h-16 rounded-full bg-linear-to-br from-cyan-500 to-purple-600 flex items-center justify-center border-2 border-cyan-400">
-                    <span className="text-white text-2xl font-bold">
+                  <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center border-2 border-primary">
+                    <span className="text-primary-content text-2xl font-bold">
                       {userProfile?.firstName?.[0]?.toUpperCase() || userProfile?.lastName?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
                     </span>
                   </div>
                 )}
                 <div>
-                  <h1 className="text-3xl font-bold bg-linear-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
+                  <h1 className="text-3xl font-bold text-base-content">
                     {userProfile.firstName && userProfile.lastName
                       ? `${userProfile.firstName} ${userProfile.lastName}`
                       : "My Profile"}
                   </h1>
-                  <p className="text-white/70 text-sm">{user.email}</p>
+                  <p className="text-base-content/70 text-sm">{user.email}</p>
                 </div>
               </div>
               {!isEditing && (
                 <button
                   onClick={handleEdit}
-                  className="btn btn-sm text-white border-2 border-cyan-400 bg-cyan-400/20 hover:bg-cyan-400/30 hover:border-cyan-300 font-semibold shadow-lg shadow-cyan-400/20"
+                  className="btn btn-sm btn-primary font-semibold"
                 >
                   Edit Profile
                 </button>
@@ -536,7 +506,7 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="form-control">
                     <label htmlFor="profile-firstname" className="label pb-1.5">
-                      <span className="label-text text-white font-medium">
+                      <span className="label-text font-medium">
                         First Name *
                       </span>
                     </label>
@@ -544,8 +514,8 @@ export default function ProfilePage() {
                       id="profile-firstname"
                       type="text"
                       placeholder="Enter your first name"
-                      className={`input input-bordered w-full bg-slate-900/80 border-slate-600/50 text-white placeholder:text-gray-500 focus:border-cyan-400 focus:outline-none focus:bg-slate-900 ${
-                        firstNameError ? 'border-red-500' : ''
+                      className={`input input-bordered w-full ${
+                        firstNameError ? 'input-error' : ''
                       }`}
                       value={firstName}
                       onChange={(e) => {
@@ -557,7 +527,7 @@ export default function ProfilePage() {
                     />
                     {firstNameError && (
                       <label className="label">
-                        <span className="label-text-alt text-red-400">
+                        <span className="label-text-alt text-error">
                           {firstNameError}
                         </span>
                       </label>
@@ -566,7 +536,7 @@ export default function ProfilePage() {
 
                   <div className="form-control">
                     <label htmlFor="profile-lastname" className="label pb-1.5">
-                      <span className="label-text text-white font-medium">
+                      <span className="label-text font-medium">
                         Last Name *
                       </span>
                     </label>
@@ -587,7 +557,7 @@ export default function ProfilePage() {
                     />
                     {lastNameError && (
                       <label className="label">
-                        <span className="label-text-alt text-red-400">
+                        <span className="label-text-alt text-error">
                           {lastNameError}
                         </span>
                       </label>
@@ -598,7 +568,7 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="form-control">
                     <label htmlFor="profile-pincode" className="label pb-1.5">
-                      <span className="label-text text-white font-medium">
+                      <span className="label-text font-medium">
                         ZIP Code *
                       </span>
                     </label>
@@ -616,14 +586,14 @@ export default function ProfilePage() {
                     />
                     {pincodeError && (
                       <label className="label">
-                        <span className="label-text-alt text-red-400">
+                        <span className="label-text-alt text-error">
                           {pincodeError}
                         </span>
                       </label>
                     )}
                     {fetchingCity && (
                       <label className="label">
-                        <span className="label-text-alt text-cyan-400">
+                        <span className="label-text-alt text-primary">
                           <span className="loading loading-spinner loading-xs mr-1"></span>
                           Finding city...
                         </span>
@@ -633,7 +603,7 @@ export default function ProfilePage() {
 
                   <div className="form-control">
                     <label htmlFor="profile-city" className="label pb-1.5">
-                      <span className="label-text text-white font-medium">
+                      <span className="label-text font-medium">
                         City *
                       </span>
                     </label>
@@ -654,14 +624,14 @@ export default function ProfilePage() {
                     />
                     {cityError && (
                       <label className="label">
-                        <span className="label-text-alt text-red-400">
+                        <span className="label-text-alt text-error">
                           {cityError}
                         </span>
                       </label>
                     )}
                     {city && !fetchingCity && !cityError && (
                       <label className="label">
-                        <span className="label-text-alt text-green-400">
+                        <span className="label-text-alt text-success">
                           ✓ City found
                         </span>
                       </label>
@@ -678,8 +648,8 @@ export default function ProfilePage() {
                   <textarea
                     id="profile-bio"
                     placeholder="Tell us about yourself..."
-                    className={`textarea textarea-bordered w-full bg-slate-900/80 border-slate-600/50 text-white placeholder:text-gray-500 focus:border-cyan-400 focus:outline-none focus:bg-slate-900 ${
-                      bioError ? 'border-red-500' : ''
+                    className={`textarea textarea-bordered w-full ${
+                      bioError ? 'textarea-error' : ''
                     }`}
                     value={bio}
                     onChange={(e) => {
@@ -692,13 +662,13 @@ export default function ProfilePage() {
                   />
                   {bioError && (
                     <label className="label">
-                      <span className="label-text-alt text-red-400">
+                      <span className="label-text-alt text-error">
                         {bioError}
                       </span>
                     </label>
                   )}
                   <label className="label">
-                    <span className="label-text-alt text-white/60">
+                    <span className="label-text-alt text-base-content/60">
                       {bio.length}/500 characters
                     </span>
                   </label>
@@ -727,13 +697,13 @@ export default function ProfilePage() {
                   />
                   {favoriteQuoteError && (
                     <label className="label">
-                      <span className="label-text-alt text-red-400">
+                      <span className="label-text-alt text-error">
                         {favoriteQuoteError}
                       </span>
                     </label>
                   )}
                   <label className="label">
-                    <span className="label-text-alt text-white/60">
+                    <span className="label-text-alt text-base-content/60">
                       {favoriteQuote.length}/200 characters
                     </span>
                   </label>
@@ -743,7 +713,7 @@ export default function ProfilePage() {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="btn flex-1 text-white border-2 border-cyan-400 bg-cyan-400/20 hover:bg-cyan-400/30 hover:border-cyan-300 font-semibold shadow-lg shadow-cyan-400/20 hover:scale-105 transition-transform disabled:opacity-50"
+                    className="btn flex-1 btn-primary font-semibold hover:scale-105 transition-transform disabled:opacity-50"
                   >
                     {saving ? (
                       <span className="loading loading-spinner loading-sm"></span>
@@ -755,7 +725,7 @@ export default function ProfilePage() {
                     type="button"
                     onClick={handleCancel}
                     disabled={saving}
-                    className="btn flex-1 text-white border-2 border-slate-500 bg-slate-700/50 hover:bg-slate-600 hover:border-slate-400 font-semibold disabled:opacity-50"
+                    className="btn flex-1 btn-outline font-semibold disabled:opacity-50"
                   >
                     Cancel
                   </button>
@@ -766,38 +736,38 @@ export default function ProfilePage() {
               <div className="space-y-6">
                 {/* Account Information */}
                 <div>
-                  <h2 className="text-xl font-semibold text-white mb-4">Account Information</h2>
+                  <h2 className="text-xl font-semibold text-base-content mb-4">Account Information</h2>
                   <div className="space-y-3">
-                    <div className="flex justify-between items-center py-2 border-b border-slate-700/50">
-                      <span className="text-white/60">Email</span>
-                      <span className="text-white font-medium">{user.email}</span>
+                    <div className="flex justify-between items-center py-2 border-b border-base-300">
+                      <span className="text-base-content/60">Email</span>
+                      <span className="text-base-content font-medium">{user.email}</span>
                     </div>
-                    <div className="flex justify-between items-center py-2 border-b border-slate-700/50">
-                      <span className="text-white/60">Account Created</span>
-                      <span className="text-white font-medium">
+                    <div className="flex justify-between items-center py-2 border-b border-base-300">
+                      <span className="text-base-content/60">Account Created</span>
+                      <span className="text-base-content font-medium">
                         {formatDate(userProfile.createdAt)}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center py-2 border-b border-slate-700/50">
-                      <span className="text-white/60">Last Login</span>
-                      <span className="text-white font-medium">
+                    <div className="flex justify-between items-center py-2 border-b border-base-300">
+                      <span className="text-base-content/60">Last Login</span>
+                      <span className="text-base-content font-medium">
                         {formatDate(userProfile.lastLogin)}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center py-2 border-b border-slate-700/50">
-                      <span className="text-white/60">Auth Methods</span>
+                    <div className="flex justify-between items-center py-2 border-b border-base-300">
+                      <span className="text-base-content/60">Auth Methods</span>
                       <div className="flex flex-wrap gap-2 justify-end">
                         {userProfile.authProviders && userProfile.authProviders.length > 0 ? (
                           userProfile.authProviders.map((provider, index) => (
                             <span
                               key={index}
-                              className="px-2 py-1 rounded text-xs font-medium bg-cyan-400/20 text-cyan-300 border border-cyan-400/50"
+                              className="badge badge-primary badge-outline"
                             >
                               {provider === "google.com" ? "Google" : provider === "password" ? "Email/Password" : provider}
                             </span>
                           ))
                         ) : (
-                          <span className="text-white font-medium capitalize">
+                          <span className="text-base-content font-medium capitalize">
                             {userProfile.metadata?.signUpMethod || "N/A"}
                           </span>
                         )}
@@ -808,42 +778,42 @@ export default function ProfilePage() {
 
                 {/* Profile Information */}
                 <div>
-                  <h2 className="text-xl font-semibold text-white mb-4">Profile Information</h2>
+                  <h2 className="text-xl font-semibold text-base-content mb-4">Profile Information</h2>
                   <div className="space-y-3">
-                    <div className="flex justify-between items-center py-2 border-b border-slate-700/50">
-                      <span className="text-white/60">First Name</span>
-                      <span className="text-white font-medium">
+                    <div className="flex justify-between items-center py-2 border-b border-base-300">
+                      <span className="text-base-content/60">First Name</span>
+                      <span className="text-base-content font-medium">
                         {userProfile.firstName || "Not set"}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center py-2 border-b border-slate-700/50">
-                      <span className="text-white/60">Last Name</span>
-                      <span className="text-white font-medium">
+                    <div className="flex justify-between items-center py-2 border-b border-base-300">
+                      <span className="text-base-content/60">Last Name</span>
+                      <span className="text-base-content font-medium">
                         {userProfile.lastName || "Not set"}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center py-2 border-b border-slate-700/50">
-                      <span className="text-white/60">ZIP Code</span>
-                      <span className="text-white font-medium">
+                    <div className="flex justify-between items-center py-2 border-b border-base-300">
+                      <span className="text-base-content/60">ZIP Code</span>
+                      <span className="text-base-content font-medium">
                         {userProfile.profile?.pincode || "Not set"}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center py-2 border-b border-slate-700/50">
-                      <span className="text-white/60">City</span>
-                      <span className="text-white font-medium">
+                    <div className="flex justify-between items-center py-2 border-b border-base-300">
+                      <span className="text-base-content/60">City</span>
+                      <span className="text-base-content font-medium">
                         {userProfile.profile?.city || "Not set"}
                       </span>
                     </div>
                     {userProfile.profile?.bio && (
-                      <div className="py-2 border-b border-slate-700/50">
-                        <span className="text-white/60 block mb-2">Bio</span>
-                        <p className="text-white">{userProfile.profile.bio}</p>
+                      <div className="py-2 border-b border-base-300">
+                        <span className="text-base-content/60 block mb-2">Bio</span>
+                        <p className="text-base-content">{userProfile.profile.bio}</p>
                       </div>
                     )}
                     {userProfile.profile?.favoriteQuote && (
-                      <div className="py-2 border-b border-slate-700/50">
-                        <span className="text-white/60 block mb-2">Favorite Quote</span>
-                        <p className="text-white italic">"{userProfile.profile.favoriteQuote}"</p>
+                      <div className="py-2 border-b border-base-300">
+                        <span className="text-base-content/60 block mb-2">Favorite Quote</span>
+                        <p className="text-base-content italic">"{userProfile.profile.favoriteQuote}"</p>
                       </div>
                     )}
                   </div>
@@ -852,7 +822,7 @@ export default function ProfilePage() {
                 <div className="pt-4">
                   <Link
                     href="/dashboard"
-                    className="btn w-full text-white border-2 border-cyan-400 bg-cyan-400/20 hover:bg-cyan-400/30 hover:border-cyan-300 font-semibold shadow-lg shadow-cyan-400/20"
+                    className="btn btn-primary w-full font-semibold"
                   >
                     Back to Dashboard
                   </Link>

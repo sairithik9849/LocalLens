@@ -205,6 +205,36 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     const currentAuth = getAuthInstance();
+    
+    // Get the current user's ID token before signing out
+    // This allows us to invalidate the token cache
+    let idToken = null;
+    try {
+      if (currentAuth?.currentUser) {
+        idToken = await currentAuth.currentUser.getIdToken();
+      }
+    } catch (tokenError) {
+      // If we can't get the token, proceed with logout anyway
+      console.warn('Could not get ID token for cache invalidation:', tokenError);
+    }
+
+    // Invalidate the token cache in Redis if we have a token
+    if (idToken) {
+      try {
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${idToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+      } catch (cacheError) {
+        // Don't block logout if cache invalidation fails
+        console.warn('Failed to invalidate token cache:', cacheError);
+      }
+    }
+
+    // Sign out from Firebase
     await signOut(currentAuth);
   };
 

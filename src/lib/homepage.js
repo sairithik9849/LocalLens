@@ -1,5 +1,5 @@
 import { after } from "node:test";
-import { blog , users } from "../../config/mongoCollections.js";
+import { blog , users } from "@/mongoConfig/mongoCollections.js";
 import helpers from './helpers.js';
 import { ObjectId } from 'mongodb';
 

@@ -1,7 +1,9 @@
 import { getAdminAuth } from "./firebaseAdmin";
+import { getCachedToken, setCachedToken } from "@/lib/tokenCache";
 
 /**
  * Verifies Firebase ID token from Authorization header
+ * Uses Redis cache to reduce Firebase Admin API calls
  * @param {Request} request - Next.js request object
  * @returns {Promise<{uid: string, email?: string} | null>} Decoded token or null if invalid
  */
@@ -20,14 +22,44 @@ export async function verifyToken(request) {
       return null;
     }
 
-    // Verify token with Firebase Admin
+    // Check Redis cache first
+    try {
+      const cachedToken = await getCachedToken(token);
+      if (cachedToken) {
+        console.log('[Auth] Redis cache');
+        // Return cached result immediately
+        return {
+          uid: cachedToken.uid,
+          email: cachedToken.email,
+        };
+      }
+    } catch (cacheError) {
+      // Cache read failed, continue with Firebase verification
+      console.warn('Redis cache read error, falling back to Firebase:', cacheError.message);
+    }
+
+    // Token not in cache or cache unavailable, verify with Firebase Admin
     try {
       const auth = await getAdminAuth();
       const decodedToken = await auth.verifyIdToken(token);
 
-      return {
+      const tokenData = {
         uid: decodedToken.uid,
         email: decodedToken.email,
+        expiresAt: decodedToken.exp, // Firebase token expiration (seconds since epoch)
+      };
+
+      console.log('[Auth] Firebase');
+
+      // Cache the successfully verified token
+      // Don't await - cache write failure shouldn't block the response
+      setCachedToken(token, tokenData, 3300).catch(() => {
+        // Ignore cache write errors - already logged in setCachedToken
+      });
+
+      return {
+        uid: tokenData.uid,
+        email: tokenData.email,
       };
     } catch (verifyError) {
       // Log detailed error for debugging
@@ -53,6 +85,7 @@ export async function verifyToken(request) {
       
       console.error('Error verifying token with Firebase Admin:', errorDetails);
       
+      // Don't cache failed verifications for security
       // Return null to reject the request for security
       return null;
     }
