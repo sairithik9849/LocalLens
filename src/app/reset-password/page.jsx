@@ -109,37 +109,9 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center relative"
-      style={{ background: "transparent" }}
-    >
-      {/* Background matching homepage */}
-      <div
-        className="fixed inset-0 w-full h-full"
-        style={{
-          backgroundImage: `url('https://plus.unsplash.com/premium_photo-1714051660720-888e8454a021?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8bmV3JTIweW9ya3xlbnwwfHwwfHx8MA%3D%3D')`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-          backgroundAttachment: "fixed",
-          zIndex: -2,
-        }}
-      />
-      <div
-        className="fixed inset-0 w-full h-full"
-        style={{
-          background:
-            "linear-gradient(to bottom, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.3) 30%, rgba(0, 0, 0, 0.25) 60%, rgba(0, 0, 0, 0.2) 100%)",
-          zIndex: -1,
-          pointerEvents: "none",
-        }}
-      />
-
-      <div className="w-full max-w-md mx-auto px-4 z-10 py-8">
-        <div
-          className="card shadow-2xl backdrop-blur-lg border border-gray-700/50"
-          style={{ backgroundColor: "rgba(15, 23, 42, 0.85)" }}
-        >
+    <div className="min-h-screen flex items-center justify-center bg-base-200">
+      <div className="w-full max-w-md mx-auto px-4 py-8">
+        <div className="card shadow-2xl bg-base-100 border border-base-300">
           <div className="card-body p-6">
             {/* Logo and Title */}
             <div className="text-center mb-4">
@@ -179,11 +151,11 @@ function ResetPasswordForm() {
                     </svg>
                   </div>
                 </Link>
-                <h1 className="text-3xl font-bold bg-linear-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
+                <h1 className="text-3xl font-bold text-base-content">
                   Reset Password
                 </h1>
               </div>
-              <p className="text-white/70 mt-1">
+              <p className="text-base-content/70 mt-1">
                 {success
                   ? "Password reset successful! Redirecting to login..."
                   : "Enter your new password below"}
@@ -234,7 +206,7 @@ function ResetPasswordForm() {
                   {!oobCode && (
                     <Link
                       href="/forgot-password"
-                      className="text-sm underline mt-2 hover:text-cyan-400"
+                      className="text-sm underline mt-2 hover:text-primary"
                     >
                       Request a new password reset link
                     </Link>
@@ -248,7 +220,7 @@ function ResetPasswordForm() {
               <form onSubmit={handleSubmit} className="space-y-3">
                 <div className="form-control">
                   <label htmlFor="new-password" className="label pb-1.5">
-                    <span className="label-text text-white font-medium">
+                    <span className="label-text font-medium">
                       New Password
                     </span>
                   </label>
@@ -257,7 +229,7 @@ function ResetPasswordForm() {
                       id="new-password"
                       type={showPassword ? "text" : "password"}
                       placeholder="Min. 8 chars: uppercase, lowercase, number, symbol"
-                      className="input input-bordered w-full bg-slate-900/80 border-slate-600/50 text-white placeholder:text-gray-500 focus:border-cyan-400 focus:outline-none focus:bg-slate-900 disabled:opacity-50 disabled:cursor-not-allowed pr-12"
+                      className="input input-bordered w-full disabled:opacity-50 disabled:cursor-not-allowed pr-12"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
@@ -265,7 +237,7 @@ function ResetPasswordForm() {
                     />
                     <button
                       type="button"
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-base-content/50 hover:text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       onMouseDown={() => setShowPassword(true)}
                       onMouseUp={() => setShowPassword(false)}
                       onMouseLeave={() => setShowPassword(false)}
@@ -320,7 +292,7 @@ function ResetPasswordForm() {
                     htmlFor="confirm-new-password"
                     className="label pb-1.5"
                   >
-                    <span className="label-text text-white font-medium">
+                    <span className="label-text font-medium">
                       Confirm New Password
                     </span>
                   </label>
@@ -329,7 +301,7 @@ function ResetPasswordForm() {
                       id="confirm-new-password"
                       type={showConfirmPassword ? "text" : "password"}
                       placeholder="Confirm your new password"
-                      className="input input-bordered w-full bg-slate-900/80 border-slate-600/50 text-white placeholder:text-gray-500 focus:border-cyan-400 focus:outline-none focus:bg-slate-900 disabled:opacity-50 disabled:cursor-not-allowed pr-12"
+                      className="input input-bordered w-full disabled:opacity-50 disabled:cursor-not-allowed pr-12"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
@@ -337,7 +309,7 @@ function ResetPasswordForm() {
                     />
                     <button
                       type="button"
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-base-content/50 hover:text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       onMouseDown={() => setShowConfirmPassword(true)}
                       onMouseUp={() => setShowConfirmPassword(false)}
                       onMouseLeave={() => setShowConfirmPassword(false)}
@@ -390,7 +362,7 @@ function ResetPasswordForm() {
                 <button
                   type="submit"
                   disabled={loading || !oobCode}
-                  className="btn w-full text-white border-none font-semibold hover:scale-105 transition-transform bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  className="btn btn-primary w-full font-semibold hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   {loading ? (
                     <span className="loading loading-spinner loading-sm"></span>
@@ -406,7 +378,7 @@ function ResetPasswordForm() {
               <div className="text-center mt-4">
                 <Link
                   href="/login"
-                  className="btn btn-ghost btn-sm text-white/70 hover:text-white hover:bg-slate-700/50"
+                  className="btn btn-ghost btn-sm"
                   aria-label="Back to login page"
                 >
                   ← Back to Login

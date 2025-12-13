@@ -73,7 +73,8 @@ const UserSchema = new mongoose.Schema({
     default: null
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  collection: 'users' // Explicitly set collection name to match native MongoDB driver
 });
 
 // Text index for search on firstName, lastName, and email

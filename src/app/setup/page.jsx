@@ -117,7 +117,40 @@ export default function SetupPage() {
           return;
         }
         
-        if (response.ok && data.city) {
+        // Handle async queue response (202 Accepted)
+        if (response.status === 202 && data.jobId) {
+          // Job queued, poll for result
+          const jobId = data.jobId;
+          let attempts = 0;
+          const maxAttempts = 20; // 20 seconds max wait
+          let result = null;
+
+          while (attempts < maxAttempts && !result) {
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+            
+            const statusResponse = await fetch(`/api/geocoding/status/${jobId}`);
+            const statusData = await statusResponse.json();
+
+            if (statusData.status === 'completed' && statusData.result?.city) {
+              result = statusData.result.city;
+              setCity(result);
+              setError('');
+              break;
+            } else if (statusData.status === 'failed') {
+              setCity('');
+              setError('City not found automatically. Please enter manually.');
+              break;
+            }
+
+            attempts++;
+          }
+
+          if (!result && attempts >= maxAttempts) {
+            setCity('');
+            setError('City lookup timed out. Please enter manually.');
+          }
+        } else if (response.ok && data.city) {
+          // Direct result (fallback mode)
           setCity(data.city);
           setError('');
         } else {
@@ -250,37 +283,9 @@ export default function SetupPage() {
   }
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center relative"
-      style={{ background: "transparent" }}
-    >
-      {/* Background matching homepage */}
-      <div
-        className="fixed inset-0 w-full h-full"
-        style={{
-          backgroundImage: `url('https://plus.unsplash.com/premium_photo-1714051660720-888e8454a021?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8bmV3JTIweW9ya3xlbnwwfHwwfHx8MA%3D%3D')`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-          backgroundAttachment: "fixed",
-          zIndex: -2,
-        }}
-      />
-      <div
-        className="fixed inset-0 w-full h-full"
-        style={{
-          background:
-            "linear-gradient(to bottom, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.3) 30%, rgba(0, 0, 0, 0.25) 60%, rgba(0, 0, 0, 0.2) 100%)",
-          zIndex: -1,
-          pointerEvents: "none",
-        }}
-      />
-
-      <div className="w-full max-w-md mx-auto px-4 z-10 py-8">
-        <div
-          className="card shadow-2xl backdrop-blur-lg border border-gray-700/50"
-          style={{ backgroundColor: "rgba(15, 23, 42, 0.85)" }}
-        >
+    <div className="min-h-screen flex items-center justify-center bg-base-200">
+      <div className="w-full max-w-md mx-auto px-4 py-8">
+        <div className="card shadow-2xl bg-base-100 border border-base-300">
           <div className="card-body p-6">
             {/* Logo and Title */}
             <div className="text-center mb-4">
@@ -320,11 +325,11 @@ export default function SetupPage() {
                     </svg>
                   </div>
                 </Link>
-                <h1 className="text-3xl font-bold bg-linear-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
+                <h1 className="text-3xl font-bold text-base-content">
                   Complete Your Profile
                 </h1>
               </div>
-              <p className="text-white/70 mt-1">
+              <p className="text-base-content/70 mt-1">
                 Please provide a few details to get started
               </p>
             </div>
@@ -353,7 +358,7 @@ export default function SetupPage() {
             <form onSubmit={handleSubmit} className="space-y-3">
               <div className="form-control">
                 <label htmlFor="setup-firstname" className="label pb-1.5">
-                  <span className="label-text text-white font-medium">
+                  <span className="label-text font-medium">
                     First Name *
                   </span>
                 </label>
@@ -361,8 +366,8 @@ export default function SetupPage() {
                   id="setup-firstname"
                   type="text"
                   placeholder="Enter your first name"
-                  className={`input input-bordered w-full bg-slate-900/80 border-slate-600/50 text-white placeholder:text-gray-500 focus:border-cyan-400 focus:outline-none focus:bg-slate-900 ${
-                    firstNameError ? 'border-red-500' : ''
+                  className={`input input-bordered w-full ${
+                    firstNameError ? 'input-error' : ''
                   }`}
                   value={firstName}
                   onChange={(e) => {
@@ -374,7 +379,7 @@ export default function SetupPage() {
                 />
                 {firstNameError && (
                   <label className="label">
-                    <span className="label-text-alt text-red-400">
+                    <span className="label-text-alt text-error">
                       {firstNameError}
                     </span>
                   </label>
@@ -383,7 +388,7 @@ export default function SetupPage() {
 
               <div className="form-control">
                 <label htmlFor="setup-lastname" className="label pb-1.5">
-                  <span className="label-text text-white font-medium">
+                  <span className="label-text font-medium">
                     Last Name *
                   </span>
                 </label>
@@ -391,8 +396,8 @@ export default function SetupPage() {
                   id="setup-lastname"
                   type="text"
                   placeholder="Enter your last name"
-                  className={`input input-bordered w-full bg-slate-900/80 border-slate-600/50 text-white placeholder:text-gray-500 focus:border-cyan-400 focus:outline-none focus:bg-slate-900 ${
-                    lastNameError ? 'border-red-500' : ''
+                  className={`input input-bordered w-full ${
+                    lastNameError ? 'input-error' : ''
                   }`}
                   value={lastName}
                   onChange={(e) => {
@@ -404,7 +409,7 @@ export default function SetupPage() {
                 />
                 {lastNameError && (
                   <label className="label">
-                    <span className="label-text-alt text-red-400">
+                    <span className="label-text-alt text-error">
                       {lastNameError}
                     </span>
                   </label>
@@ -413,7 +418,7 @@ export default function SetupPage() {
 
               <div className="form-control">
                 <label htmlFor="setup-pincode" className="label pb-1.5">
-                  <span className="label-text text-white font-medium">
+                  <span className="label-text font-medium">
                     ZIP Code *
                   </span>
                 </label>
@@ -421,8 +426,8 @@ export default function SetupPage() {
                   id="setup-pincode"
                   type="text"
                   placeholder="12345 or 12345-6789"
-                  className={`input input-bordered w-full bg-slate-900/80 border-slate-600/50 text-white placeholder:text-gray-500 focus:border-cyan-400 focus:outline-none focus:bg-slate-900 ${
-                    pincodeError ? 'border-red-500' : ''
+                  className={`input input-bordered w-full ${
+                    pincodeError ? 'input-error' : ''
                   }`}
                   value={pincode}
                   onChange={(e) => setPincode(e.target.value)}
@@ -431,14 +436,14 @@ export default function SetupPage() {
                 />
                 {pincodeError && (
                   <label className="label">
-                    <span className="label-text-alt text-red-400">
+                    <span className="label-text-alt text-error">
                       {pincodeError}
                     </span>
                   </label>
                 )}
                 {fetchingCity && (
                   <label className="label">
-                    <span className="label-text-alt text-cyan-400">
+                    <span className="label-text-alt text-primary">
                       <span className="loading loading-spinner loading-xs mr-1"></span>
                       Finding city...
                     </span>
@@ -448,7 +453,7 @@ export default function SetupPage() {
 
               <div className="form-control">
                 <label htmlFor="setup-city" className="label pb-1.5">
-                  <span className="label-text text-white font-medium">
+                  <span className="label-text font-medium">
                     City *
                   </span>
                 </label>
@@ -456,8 +461,8 @@ export default function SetupPage() {
                   id="setup-city"
                   type="text"
                   placeholder="Enter your city"
-                  className={`input input-bordered w-full bg-slate-900/80 border-slate-600/50 text-white placeholder:text-gray-500 focus:border-cyan-400 focus:outline-none focus:bg-slate-900 ${
-                    cityError ? 'border-red-500' : ''
+                  className={`input input-bordered w-full ${
+                    cityError ? 'input-error' : ''
                   }`}
                   value={city}
                   onChange={(e) => {
@@ -469,14 +474,14 @@ export default function SetupPage() {
                 />
                 {cityError && (
                   <label className="label">
-                    <span className="label-text-alt text-red-400">
+                    <span className="label-text-alt text-error">
                       {cityError}
                     </span>
                   </label>
                 )}
                 {city && !fetchingCity && !cityError && (
                   <label className="label">
-                    <span className="label-text-alt text-green-400">
+                    <span className="label-text-alt text-success">
                       ✓ City found
                     </span>
                   </label>
@@ -486,7 +491,7 @@ export default function SetupPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="btn w-full text-white border-none font-semibold hover:scale-105 transition-transform bg-slate-800 hover:bg-slate-700"
+                className="btn btn-primary w-full font-semibold hover:scale-105 transition-transform"
               >
                 {loading ? (
                   <span className="loading loading-spinner loading-sm"></span>

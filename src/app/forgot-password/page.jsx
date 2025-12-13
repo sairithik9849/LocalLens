@@ -49,37 +49,9 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center relative"
-      style={{ background: "transparent" }}
-    >
-      {/* Background matching homepage */}
-      <div
-        className="fixed inset-0 w-full h-full"
-        style={{
-          backgroundImage: `url('https://plus.unsplash.com/premium_photo-1714051660720-888e8454a021?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8bmV3JTIweW9ya3xlbnwwfHwwfHx8MA%3D%3D')`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-          backgroundAttachment: "fixed",
-          zIndex: -2,
-        }}
-      />
-      <div
-        className="fixed inset-0 w-full h-full"
-        style={{
-          background:
-            "linear-gradient(to bottom, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.3) 30%, rgba(0, 0, 0, 0.25) 60%, rgba(0, 0, 0, 0.2) 100%)",
-          zIndex: -1,
-          pointerEvents: "none",
-        }}
-      />
-
-      <div className="w-full max-w-md mx-auto px-4 z-10 py-8">
-        <div
-          className="card shadow-2xl backdrop-blur-lg border border-gray-700/50"
-          style={{ backgroundColor: "rgba(15, 23, 42, 0.85)" }}
-        >
+    <div className="min-h-screen flex items-center justify-center bg-base-200">
+      <div className="w-full max-w-md mx-auto px-4 py-8">
+        <div className="card shadow-2xl bg-base-100 border border-base-300">
           <div className="card-body p-6">
             {/* Logo and Title */}
             <div className="text-center mb-6">
@@ -119,16 +91,11 @@ export default function ForgotPasswordPage() {
                     </svg>
                   </div>
                 </Link>
-                <h1 className="text-4xl font-bold mb-2">
-                  <span className="bg-linear-to-r from-cyan-400 to-cyan-500 bg-clip-text text-transparent">
-                    Reset
-                  </span>{" "}
-                  <span className="bg-linear-to-r from-purple-400 to-purple-500 bg-clip-text text-transparent">
-                    Password
-                  </span>
+                <h1 className="text-4xl font-bold mb-2 text-base-content">
+                  Reset Password
                 </h1>
               </div>
-              <p className="text-white/80 text-sm leading-relaxed px-2">
+              <p className="text-base-content/70 text-sm leading-relaxed px-2">
                 {success
                   ? "Check your email for password reset instructions"
                   : "Enter your email address and we'll send you a link to reset your password"}
@@ -190,7 +157,7 @@ export default function ForgotPasswordPage() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="form-control">
                   <label htmlFor="reset-email" className="label pb-1.5">
-                    <span className="label-text text-white font-medium">
+                    <span className="label-text font-medium">
                       Email
                     </span>
                   </label>
@@ -198,7 +165,7 @@ export default function ForgotPasswordPage() {
                     id="reset-email"
                     type="email"
                     placeholder="Enter your email"
-                    className="input input-bordered w-full bg-slate-900/80 border-slate-600/50 text-white placeholder:text-gray-500 focus:border-cyan-400 focus:outline-none focus:bg-slate-900 transition-all"
+                    className="input input-bordered w-full transition-all"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -209,7 +176,7 @@ export default function ForgotPasswordPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="btn w-full text-white border-none font-semibold hover:scale-105 transition-all duration-200 bg-linear-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-lg shadow-cyan-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  className="btn btn-primary w-full font-semibold hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   {loading ? (
                     <>
@@ -240,10 +207,10 @@ export default function ForgotPasswordPage() {
             )}
 
             {/* Back to Login */}
-            <div className="text-center mt-6 pt-4 border-t border-gray-700/50">
+            <div className="text-center mt-6 pt-4 border-t border-base-300">
               <Link
                 href="/login"
-                className="btn btn-ghost btn-sm text-white/70 hover:text-white hover:bg-slate-700/50 transition-all"
+                className="btn btn-ghost btn-sm transition-all"
                 aria-label="Back to login page"
               >
                 <svg

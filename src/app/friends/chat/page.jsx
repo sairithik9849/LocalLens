@@ -208,190 +208,189 @@ export default function ChatPage() {
   }
 
   return (
-    <>
+    <div className="min-h-screen bg-base-200">
       <Navigation />
-      <div className="bg-gray-100">
-        {/* Chat Container */}
-        <div className="flex" style={{ height: 'calc(100vh - 80px)' }}>
-          {/* Friends List Sidebar */}
-          <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
-            <div className="p-4 border-b border-gray-200 bg-gray-50">
-              <h2 className="text-xl font-bold">Messages</h2>
-              <p className="text-sm text-gray-600 mt-1">
-                {loading ? 'Loading...' : `${friends.length} conversation${friends.length !== 1 ? 's' : ''}`}
-              </p>
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              {loading ? (
-                <div className="flex items-center justify-center h-32">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
-                </div>
-              ) : friends.length === 0 ? (
-                <div className="p-6 text-center text-gray-500">
-                  <p>No friends yet</p>
-                  <Link href="/friends/search" className="text-green-600 hover:underline text-sm mt-2 block">
-                    Find friends to chat with
-                  </Link>
-                </div>
-              ) : (
-                friends.map((friend) => (
-                  <button
-                    key={friend._id}
-                    onClick={() => handleSelectFriend(friend)}
-                    className={`w-full p-4 flex items-center gap-3 hover:bg-gray-50 transition border-b border-gray-100 ${
-                      selectedFriend?._id === friend._id ? 'bg-green-50 border-l-4 border-l-green-600' : ''
-                    }`}
-                  >
-                    <div className="relative flex-shrink-0">
-                      <img
-                        src={friend.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(friend.name)}&background=f39c12&color=fff`}
-                        alt={friend.name}
-                        className="w-12 h-12 rounded-full"
-                      />
-                      {/* Unread count badge */}
-                      {friend.unreadCount > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                          {friend.unreadCount}
+      
+      {/* Chat Container */}
+      <div className="flex h-[calc(100vh-4rem)]">
+        {/* Friends List Sidebar */}
+        <div className="w-80 bg-base-100 border-r border-base-300 flex flex-col">
+          <div className="p-4 border-b border-base-300 bg-base-200">
+            <h2 className="text-xl font-bold text-base-content">Messages</h2>
+            <p className="text-sm text-base-content/70 mt-1">
+              {loading ? 'Loading...' : `${friends.length} conversation${friends.length !== 1 ? 's' : ''}`}
+            </p>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            {loading ? (
+              <div className="flex items-center justify-center h-32">
+                <span className="loading loading-spinner loading-lg"></span>
+              </div>
+            ) : friends.length === 0 ? (
+              <div className="p-6 text-center text-base-content/70">
+                <p>No friends yet</p>
+                <Link href="/friends/search" className="link link-primary text-sm mt-2 block">
+                  Find friends to chat with
+                </Link>
+              </div>
+            ) : (
+              friends.map((friend) => (
+                <button
+                  key={friend._id}
+                  onClick={() => handleSelectFriend(friend)}
+                  className={`w-full p-4 flex items-center gap-3 hover:bg-base-200 transition border-b border-base-300 ${
+                    selectedFriend?._id === friend._id ? 'bg-primary/10 border-l-4 border-l-primary' : ''
+                  }`}
+                >
+                  <div className="relative flex-shrink-0">
+                    <img
+                      src={friend.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(friend.name)}&background=f39c12&color=fff`}
+                      alt={friend.name}
+                      className="w-12 h-12 rounded-full"
+                    />
+                    {/* Unread count badge */}
+                    {friend.unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 badge badge-error badge-sm">
+                        {friend.unreadCount}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex-1 text-left min-w-0">
+                    <div className="flex justify-between items-baseline">
+                      <h3 className={`font-semibold truncate ${friend.unreadCount > 0 ? 'text-primary' : 'text-base-content'}`}>
+                        {friend.name}
+                      </h3>
+                      {friend.lastMessageTime && (
+                        <span className="text-xs text-base-content/60 ml-2 flex-shrink-0">
+                          {formatLastMessageTime(friend.lastMessageTime)}
                         </span>
                       )}
                     </div>
-                    <div className="flex-1 text-left min-w-0">
-                      <div className="flex justify-between items-baseline">
-                        <h3 className={`font-semibold truncate ${friend.unreadCount > 0 ? 'text-green-600' : ''}`}>
-                          {friend.name}
-                        </h3>
-                        {friend.lastMessageTime && (
-                          <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
-                            {formatLastMessageTime(friend.lastMessageTime)}
-                          </span>
-                        )}
-                      </div>
-                      <p className={`text-sm truncate ${friend.unreadCount > 0 ? 'font-semibold text-gray-900' : 'text-gray-600'}`}>
-                        {friend.lastMessage || 'No messages yet'}
-                      </p>
-                    </div>
-                  </button>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Chat Area */}
-          <div className="flex-1 flex flex-col">
-            {selectedFriend ? (
-              <>
-                {/* Chat Header */}
-                <div className="p-4 bg-white border-b border-gray-200 flex items-center gap-3 shadow-sm">
-                  <div className="relative">
-                    <img
-                      src={selectedFriend.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedFriend.name)}&background=f39c12&color=fff`}
-                      alt={selectedFriend.name}
-                      className="w-12 h-12 rounded-full"
-                    />
+                    <p className={`text-sm truncate ${friend.unreadCount > 0 ? 'font-semibold text-base-content' : 'text-base-content/70'}`}>
+                      {friend.lastMessage || 'No messages yet'}
+                    </p>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">{selectedFriend.name}</h3>
-                    <p className="text-sm text-gray-600">{selectedFriend.email}</p>
-                  </div>
-                </div>
-
-                {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
-                  {messages.length === 0 ? (
-                    <div className="flex items-center justify-center h-full">
-                      <p className="text-gray-500">No messages yet. Start the conversation!</p>
-                    </div>
-                  ) : (
-                    messages.map((message, index) => {
-                      const isSent = message.senderId === user.uid;
-                      const showAvatar = index === 0 || messages[index - 1].senderId !== message.senderId;
-                      
-                      return (
-                        <div
-                          key={message.id || index}
-                          className={`mb-4 flex ${isSent ? 'justify-end' : 'justify-start'}`}
-                        >
-                          <div className={`flex gap-2 max-w-md ${isSent ? 'flex-row-reverse' : ''}`}>
-                            {!isSent && showAvatar && (
-                              <img
-                                src={selectedFriend.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedFriend.name)}&background=f39c12&color=fff`}
-                                alt={selectedFriend.name}
-                                className="w-8 h-8 rounded-full flex-shrink-0"
-                              />
-                            )}
-                            {!isSent && !showAvatar && (
-                              <div className="w-8 flex-shrink-0"></div>
-                            )}
-                            <div>
-                              <div
-                                className={`px-4 py-2 rounded-2xl ${
-                                  isSent
-                                    ? 'bg-green-600 text-white rounded-br-md'
-                                    : 'bg-white text-gray-800 shadow-sm rounded-bl-md'
-                                }`}
-                              >
-                                <p className="break-words">{message.content}</p>
-                              </div>
-                              <p className={`text-xs mt-1 px-2 ${
-                                isSent ? 'text-right text-gray-500' : 'text-gray-500'
-                              }`}>
-                                {formatTime(message.createdAt)}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                  <div ref={messagesEndRef} />
-                </div>
-
-                {/* Message Input */}
-                <form onSubmit={sendMessage} className="p-4 bg-white border-t border-gray-200">
-                  <div className="flex gap-3">
-                    <input
-                      type="text"
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      placeholder="Type a message..."
-                      className="flex-1 px-4 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
-                    />
-                    <button
-                      type="submit"
-                      disabled={!newMessage.trim()}
-                      className="px-6 py-3 bg-green-600 text-white rounded-full hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition font-medium"
-                    >
-                      Send
-                    </button>
-                  </div>
-                </form>
-              </>
-            ) : (
-              <div className="flex-1 flex items-center justify-center bg-gray-50">
-                <div className="text-center">
-                  <svg
-                    className="mx-auto h-20 w-20 text-gray-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                    />
-                  </svg>
-                  <h3 className="mt-4 text-lg font-medium text-gray-900">No chat selected</h3>
-                  <p className="mt-2 text-sm text-gray-500">
-                    Choose a friend from the list to start messaging
-                  </p>
-                </div>
-              </div>
+                </button>
+              ))
             )}
           </div>
         </div>
+
+        {/* Chat Area */}
+        <div className="flex-1 flex flex-col">
+          {selectedFriend ? (
+            <>
+              {/* Chat Header */}
+              <div className="p-4 bg-base-100 border-b border-base-300 flex items-center gap-3 shadow-sm">
+                <div className="relative">
+                  <img
+                    src={selectedFriend.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedFriend.name)}&background=f39c12&color=fff`}
+                    alt={selectedFriend.name}
+                    className="w-12 h-12 rounded-full"
+                  />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg text-base-content">{selectedFriend.name}</h3>
+                  <p className="text-sm text-base-content/70">{selectedFriend.email}</p>
+                </div>
+              </div>
+
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto p-6 bg-base-200">
+                {messages.length === 0 ? (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-base-content/70">No messages yet. Start the conversation!</p>
+                  </div>
+                ) : (
+                  messages.map((message, index) => {
+                    const isSent = message.senderId === user.uid;
+                    const showAvatar = index === 0 || messages[index - 1].senderId !== message.senderId;
+                    
+                    return (
+                      <div
+                        key={message.id || index}
+                        className={`mb-4 flex ${isSent ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div className={`flex gap-2 max-w-md ${isSent ? 'flex-row-reverse' : ''}`}>
+                          {!isSent && showAvatar && (
+                            <img
+                              src={selectedFriend.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedFriend.name)}&background=f39c12&color=fff`}
+                              alt={selectedFriend.name}
+                              className="w-8 h-8 rounded-full flex-shrink-0"
+                            />
+                          )}
+                          {!isSent && !showAvatar && (
+                            <div className="w-8 flex-shrink-0"></div>
+                          )}
+                          <div>
+                            <div
+                              className={`px-4 py-2 rounded-2xl ${
+                                isSent
+                                  ? 'bg-primary text-primary-content rounded-br-md'
+                                  : 'bg-base-100 text-base-content shadow-sm rounded-bl-md'
+                              }`}
+                            >
+                              <p className="break-words">{message.content}</p>
+                            </div>
+                            <p className={`text-xs mt-1 px-2 text-base-content/60 ${
+                              isSent ? 'text-right' : ''
+                            }`}>
+                              {formatTime(message.createdAt)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Message Input */}
+              <form onSubmit={sendMessage} className="p-4 bg-base-100 border-t border-base-300">
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type a message..."
+                    className="input input-bordered flex-1 rounded-full"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!newMessage.trim()}
+                    className="btn btn-primary rounded-full disabled:opacity-50"
+                  >
+                    Send
+                  </button>
+                </div>
+              </form>
+            </>
+          ) : (
+            <div className="flex-1 flex items-center justify-center bg-base-200">
+              <div className="text-center">
+                <svg
+                  className="mx-auto h-20 w-20 text-base-content/40"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                  />
+                </svg>
+                <h3 className="mt-4 text-lg font-medium text-base-content">No chat selected</h3>
+                <p className="mt-2 text-sm text-base-content/70">
+                  Choose a friend from the list to start messaging
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </>
+    </div>
   );
 }

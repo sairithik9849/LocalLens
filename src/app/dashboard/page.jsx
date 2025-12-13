@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useAuth } from "@/firebase/AuthContext";
 import { isProfileComplete } from "@/lib/userProfileCheck.js";
+import Navigation from "@/app/components/Navigation";
 
 export default function DashboardPage() {
   const { user, userProfile, loading, logout } = useAuth();
@@ -97,24 +97,13 @@ export default function DashboardPage() {
     }
   }, [user, loading, router]); // Removed userProfile from dependencies to avoid infinite loops
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      router.push("/");
-    } catch (error) {
-      console.error("Error logging out:", error);
-    }
-  };
 
   if (loading || checkingProfile) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ background: "transparent" }}
-      >
+      <div className="min-h-screen flex items-center justify-center bg-base-200">
         <div className="text-center">
-          <span className="loading loading-spinner loading-lg text-cyan-400"></span>
-          <p className="text-white mt-4">Loading...</p>
+          <span className="loading loading-spinner loading-lg text-primary"></span>
+          <p className="text-base-content mt-4">Loading...</p>
         </div>
       </div>
     );
@@ -125,126 +114,34 @@ export default function DashboardPage() {
   }
 
   return (
-    <div
-      className="min-h-screen relative animate-page-transition"
-      style={{ background: "transparent" }}
-    >
-      {/* Background matching homepage */}
-      <div
-        className="fixed inset-0 w-full h-full"
-        style={{
-          backgroundImage: `url('https://plus.unsplash.com/premium_photo-1714051660720-888e8454a021?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8bmV3JTIweW9ya3xlbnwwfHwwfHx8MA%3D%3D')`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-          backgroundAttachment: "fixed",
-          zIndex: -2,
-        }}
-      />
-      <div
-        className="fixed inset-0 w-full h-full"
-        style={{
-          background:
-            "linear-gradient(to bottom, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.3) 30%, rgba(0, 0, 0, 0.25) 60%, rgba(0, 0, 0, 0.2) 100%)",
-          zIndex: -1,
-          pointerEvents: "none",
-        }}
-      />
-
-      {/* Navigation */}
-      <nav
-        className="navbar backdrop-blur-lg shadow-xl sticky top-0 z-50 border-b"
-        style={{
-          backgroundColor: "rgba(15, 23, 42, 0.7)",
-          borderColor: "rgba(34, 211, 238, 0.3)",
-        }}
-      >
-        <div className="container mx-auto px-4 lg:px-8 w-full flex items-center justify-between">
-          <div className="flex-1 flex items-center">
-            <Link
-              href="/"
-              className="btn btn-ghost text-xl font-bold hover:scale-105 transition-all duration-300 group"
-            >
-              <div className="relative">
-                <div className="absolute inset-0 bg-cyan-400/20 rounded-full blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-7 w-7 mr-2 text-cyan-400 group-hover:text-cyan-300 transition-colors"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                  />
-                </svg>
-              </div>
-              <span className="bg-linear-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
-                LocalLens
-              </span>
-            </Link>
-          </div>
-          <div className="flex-none flex items-center gap-3 ml-auto">
-            <Link
-              href="/profile"
-              className="btn btn-sm md:btn-md transition-all duration-300 font-medium border-2 border-cyan-400/50 hover:border-cyan-400 hover:bg-cyan-400/10 hover:scale-105 hover:shadow-lg hover:shadow-cyan-400/20 bg-transparent text-white"
-            >
-              Profile
-            </Link>
-            <button
-              onClick={handleLogout}
-              className="btn btn-sm md:btn-md transition-all duration-300 font-medium border-2 border-cyan-400/50 hover:border-cyan-400 hover:bg-cyan-400/10 hover:scale-105 hover:shadow-lg hover:shadow-cyan-400/20 bg-transparent text-white"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-base-200 animate-page-transition">
+      <Navigation />
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-12 relative z-10">
+      <div className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
           {/* Welcome Card */}
-          <div
-            className="card shadow-2xl backdrop-blur-lg border-2 mb-8"
-            style={{
-              backgroundColor: "rgba(15, 23, 42, 0.8)",
-              borderColor: "rgba(34, 211, 238, 0.3)",
-            }}
-          >
+          <div className="card shadow-xl bg-base-100 border border-base-300 mb-8">
             <div className="card-body">
               <div className="flex items-center gap-4 mb-4">
                 {userProfile?.photoURL ? (
                   <img
                     src={userProfile.photoURL}
                     alt="Profile"
-                    className="w-16 h-16 rounded-full border-2 shadow-lg object-cover"
-                    style={{ borderColor: "rgba(34, 211, 238, 0.6)" }}
+                    className="w-16 h-16 rounded-full border-2 border-primary shadow-lg object-cover"
                   />
                 ) : (
-                  <div
-                    className="bg-linear-to-br from-cyan-500 via-blue-500 to-purple-600 text-white rounded-full w-16 h-16 shadow-lg border-2 flex items-center justify-center"
-                    style={{ borderColor: "rgba(34, 211, 238, 0.6)" }}
-                  >
+                  <div className="bg-primary text-primary-content rounded-full w-16 h-16 shadow-lg border-2 border-primary flex items-center justify-center">
                     <span className="text-2xl font-bold">
                       {userProfile?.firstName?.[0]?.toUpperCase() || userProfile?.lastName?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
                     </span>
                   </div>
                 )}
                 <div>
-                  <h1 className="text-3xl font-bold bg-linear-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
+                  <h1 className="text-3xl font-bold text-base-content">
                     Welcome to LocalLens
                   </h1>
-                  <p className="text-white/70 mt-1">
+                  <p className="text-base-content/70 mt-1">
                     Your neighborhood intelligence dashboard
                   </p>
                 </div>
@@ -253,18 +150,12 @@ export default function DashboardPage() {
           </div>
 
           {/* User Info Card */}
-          <div
-            className="card shadow-2xl backdrop-blur-lg border-2 mb-8"
-            style={{
-              backgroundColor: "rgba(15, 23, 42, 0.8)",
-              borderColor: "rgba(34, 211, 238, 0.3)",
-            }}
-          >
+          <div className="card shadow-xl bg-base-100 border border-base-300 mb-8">
             <div className="card-body">
-              <h2 className="card-title text-white mb-4">
+              <h2 className="card-title text-base-content mb-4">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-cyan-400"
+                  className="h-6 w-6 text-primary"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -280,18 +171,18 @@ export default function DashboardPage() {
               </h2>
               <div className="space-y-3">
                 <div>
-                  <p className="text-white/60 text-sm">Email</p>
-                  <p className="text-white font-medium">{user.email}</p>
+                  <p className="text-base-content/60 text-sm">Email</p>
+                  <p className="text-base-content font-medium">{user.email}</p>
                 </div>
                 <div>
-                  <p className="text-white/60 text-sm">User ID</p>
-                  <p className="text-white font-mono text-xs break-all">
+                  <p className="text-base-content/60 text-sm">User ID</p>
+                  <p className="text-base-content font-mono text-xs break-all">
                     {user.uid}
                   </p>
                 </div>
                 <div>
-                  <p className="text-white/60 text-sm">Account Created</p>
-                  <p className="text-white font-medium">
+                  <p className="text-base-content/60 text-sm">Account Created</p>
+                  <p className="text-base-content font-medium">
                     {user.metadata.creationTime
                       ? new Date(
                           user.metadata.creationTime
@@ -305,18 +196,12 @@ export default function DashboardPage() {
 
           {/* Features Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div
-              className="card shadow-xl backdrop-blur-lg border-2 hover-lift"
-              style={{
-                backgroundColor: "rgba(51, 65, 85, 0.4)",
-                borderColor: "rgba(34, 211, 238, 0.5)",
-              }}
-            >
+            <div className="card shadow-lg bg-base-100 border border-base-300 hover:shadow-xl transition-shadow">
               <div className="card-body">
-                <div className="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center mb-4">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6 text-cyan-400"
+                    className="h-6 w-6 text-primary"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -329,27 +214,21 @@ export default function DashboardPage() {
                     />
                   </svg>
                 </div>
-                <h3 className="card-title text-white text-lg">
+                <h3 className="card-title text-base-content text-lg">
                   Interactive Maps
                 </h3>
-                <p className="text-white/80 text-sm">
+                <p className="text-base-content/70 text-sm">
                   Explore neighborhoods with dynamic heatmaps
                 </p>
               </div>
             </div>
 
-            <div
-              className="card shadow-xl backdrop-blur-lg border-2 hover-lift"
-              style={{
-                backgroundColor: "rgba(51, 65, 85, 0.4)",
-                borderColor: "rgba(34, 211, 238, 0.5)",
-              }}
-            >
+            <div className="card shadow-lg bg-base-100 border border-base-300 hover:shadow-xl transition-shadow">
               <div className="card-body">
-                <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center mb-4">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6 text-blue-400"
+                    className="h-6 w-6 text-primary"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -362,27 +241,21 @@ export default function DashboardPage() {
                     />
                   </svg>
                 </div>
-                <h3 className="card-title text-white text-lg">
+                <h3 className="card-title text-base-content text-lg">
                   Data Analytics
                 </h3>
-                <p className="text-white/80 text-sm">
+                <p className="text-base-content/70 text-sm">
                   Track trends and analyze historical data
                 </p>
               </div>
             </div>
 
-            <div
-              className="card shadow-xl backdrop-blur-lg border-2 hover-lift"
-              style={{
-                backgroundColor: "rgba(51, 65, 85, 0.4)",
-                borderColor: "rgba(34, 211, 238, 0.5)",
-              }}
-            >
+            <div className="card shadow-lg bg-base-100 border border-base-300 hover:shadow-xl transition-shadow">
               <div className="card-body">
-                <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center mb-4">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6 text-purple-400"
+                    className="h-6 w-6 text-primary"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -395,25 +268,19 @@ export default function DashboardPage() {
                     />
                   </svg>
                 </div>
-                <h3 className="card-title text-white text-lg">Community</h3>
-                <p className="text-white/80 text-sm">
+                <h3 className="card-title text-base-content text-lg">Community</h3>
+                <p className="text-base-content/70 text-sm">
                   Connect with your neighborhood
                 </p>
               </div>
             </div>
 
-            <div
-              className="card shadow-xl backdrop-blur-lg border-2 hover-lift"
-              style={{
-                backgroundColor: "rgba(51, 65, 85, 0.4)",
-                borderColor: "rgba(34, 211, 238, 0.5)",
-              }}
-            >
+            <div className="card shadow-lg bg-base-100 border border-base-300 hover:shadow-xl transition-shadow">
               <div className="card-body">
-                <div className="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center mb-4">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6 text-cyan-400"
+                    className="h-6 w-6 text-primary"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -426,10 +293,10 @@ export default function DashboardPage() {
                     />
                   </svg>
                 </div>
-                <h3 className="card-title text-white text-lg">
+                <h3 className="card-title text-base-content text-lg">
                   Real-Time Updates
                 </h3>
-                <p className="text-white/80 text-sm">
+                <p className="text-base-content/70 text-sm">
                   Stay informed with instant notifications
                 </p>
               </div>
