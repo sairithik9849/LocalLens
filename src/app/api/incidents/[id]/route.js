@@ -5,6 +5,7 @@ import User from '@/models/User';
 import Incident from '@/models/Incident';
 import { sanitizeText } from '@/lib/sanitizeInput';
 import { verifyAuthAndAuthorization } from '@/firebase/verifyToken';
+import { invalidateIncidentCache } from '@/lib/incidentCache';
 
 // PATCH - Update an incident
 export async function PATCH(request, { params }) {
@@ -165,6 +166,11 @@ export async function PATCH(request, { params }) {
       { new: true, runValidators: true }
     ).populate('reportedBy', 'firebaseUid firstName lastName photoURL');
 
+    // Invalidate incident cache after successful update
+    invalidateIncidentCache().catch(() => {
+      // Ignore cache invalidation errors - already logged
+    });
+
     return NextResponse.json({
       success: true,
       incident: {
@@ -265,6 +271,11 @@ export async function DELETE(request, { params }) {
 
     // Delete the incident
     await Incident.findByIdAndDelete(id);
+
+    // Invalidate incident cache after successful deletion
+    invalidateIncidentCache().catch(() => {
+      // Ignore cache invalidation errors - already logged
+    });
 
     return NextResponse.json({
       success: true,

@@ -5,6 +5,7 @@ import User from '@/models/User';
 import Incident from '@/models/Incident';
 import { sanitizeText } from '@/lib/sanitizeInput';
 import { verifyToken } from '@/firebase/verifyToken';
+import { generateCacheKey, getCachedIncidents, setCachedIncidents, invalidateIncidentCache } from '@/lib/incidentCache';
 
 // POST - Create a new incident report
 export async function POST(request) {
@@ -135,6 +136,11 @@ export async function POST(request) {
     // Populate reporter info
     await incident.populate('reportedBy', 'firebaseUid firstName lastName photoURL');
 
+    // Invalidate incident cache after successful creation
+    invalidateIncidentCache().catch(() => {
+      // Ignore cache invalidation errors - already logged
+    });
+
     return NextResponse.json({
       success: true,
       incident: {
@@ -164,14 +170,36 @@ export async function POST(request) {
 // GET - Fetch incidents for map display
 export async function GET(request) {
   try {
-    await connectDB();
-    
     const { searchParams } = new URL(request.url);
     const minLat = searchParams.get('minLat');
     const maxLat = searchParams.get('maxLat');
     const minLng = searchParams.get('minLng');
     const maxLng = searchParams.get('maxLng');
-    const limit = parseInt(searchParams.get('limit') || '100');
+    const limit = searchParams.get('limit') || '100';
+
+    // Generate cache key
+    const cacheKey = generateCacheKey({ minLat, maxLat, minLng, maxLng, limit });
+
+    // Check Redis cache first
+    try {
+      const cachedIncidents = await getCachedIncidents(cacheKey);
+      if (cachedIncidents) {
+        return NextResponse.json({
+          success: true,
+          incidents: cachedIncidents,
+          count: cachedIncidents.length
+        });
+      }
+    } catch (cacheError) {
+      // Cache read failed, continue with MongoDB query
+      // Error already logged in getCachedIncidents
+    }
+
+    // Cache miss or unavailable - query MongoDB
+    console.log('[Incidents] MongoDB query');
+    await connectDB();
+    
+    const limitNum = parseInt(limit);
 
     // Build query
     const query = {
@@ -195,7 +223,7 @@ export async function GET(request) {
     const incidents = await Incident.find(query)
       .populate('reportedBy', 'firebaseUid firstName lastName photoURL')
       .sort({ createdAt: -1 })
-      .limit(limit)
+      .limit(limitNum)
       .lean();
 
     // Format incidents
@@ -213,6 +241,11 @@ export async function GET(request) {
       },
       createdAt: incident.createdAt
     }));
+
+    // Cache the results (don't await - non-blocking)
+    setCachedIncidents(cacheKey, formattedIncidents, 900).catch(() => {
+      // Ignore cache write errors - already logged in setCachedIncidents
+    });
 
     return NextResponse.json({
       success: true,
