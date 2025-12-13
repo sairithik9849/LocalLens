@@ -86,7 +86,7 @@ export default function IncidentsPage() {
         } catch (error) {
           console.warn('Google geocoding failed, trying OpenStreetMap:', error);
           try {
-            coords = await zipcodeToCoords(userPincode);
+          coords = await zipcodeToCoords(userPincode);
           } catch (osmError) {
             console.error('Both geocoding services failed:', osmError);
             throw new Error('Failed to geocode pincode. Please check your pincode and try again.');

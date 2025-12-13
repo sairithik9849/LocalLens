@@ -27,11 +27,6 @@ function Navigation() {
       </div>
       <div className="flex-none">
         <ul className="menu menu-horizontal px-1 gap-2">
-          <li>
-            <Link href="/" className="btn btn-ghost">
-            Home
-          </Link>
-        </li>
         {user ? (
           <>
               <li>
