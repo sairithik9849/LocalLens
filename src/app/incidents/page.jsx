@@ -811,7 +811,7 @@ export default function IncidentsPage() {
                     <div className="card-body p-6">
                       <div className="flex gap-4">
                         {/* Incident Type Icon */}
-                        <div className="flex-shrink-0">
+                        <div className="shrink-0">
                           <div className={`w-16 h-16 rounded-xl ${getIncidentTypeColor(incident.incidentType).replace('badge-', 'bg-')}/20 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform`}>
                             {getIncidentTypeIcon(incident.incidentType)}
                           </div>
@@ -841,7 +841,7 @@ export default function IncidentsPage() {
                             
                             {/* Action Buttons */}
                             {isUserCreator(incident) && (
-                              <div className="flex gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                                 <button
                                   onClick={() => handleEdit(incident)}
                                   className="btn btn-sm btn-primary gap-2"
@@ -960,7 +960,7 @@ export default function IncidentsPage() {
         >
           <div className="card bg-base-100 shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-base-300 animate-fade-in-up">
             {/* Enhanced Header */}
-            <div className="card-body pb-4 border-b border-base-300 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10">
+            <div className="card-body pb-4 border-b border-base-300 bg-linear-to-r from-primary/10 via-secondary/10 to-primary/10">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-4">
                   <div className={`w-16 h-16 rounded-xl ${getIncidentTypeColor(viewingIncident.incidentType).replace('badge-', 'bg-')}/20 flex items-center justify-center text-4xl shadow-lg`}>

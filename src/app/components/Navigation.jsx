@@ -3,11 +3,12 @@
 
 import Link from 'next/link';
 import { useAuth } from '@/firebase/AuthContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 function Navigation() {
-  const { user, logout } = useAuth();
+  const { user, userProfile, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleLogout = async () => {
     try {
@@ -16,6 +17,44 @@ function Navigation() {
     } catch (error) {
       console.error('Logout error:', error);
     }
+  };
+
+  // Helper function to check if a path is active
+  const isActive = (path) => {
+    if (path === '/') {
+      return pathname === '/';
+    }
+    // Special handling for /friends to only match /friends/search, not /friends/chat
+    if (path === '/friends') {
+      return pathname === '/friends/search' || pathname.startsWith('/friends/search/');
+    }
+    // For other paths, check if pathname starts with the path
+    return pathname.startsWith(path);
+  };
+
+  // Helper function to get link style based on active state
+  const getLinkStyle = (path) => {
+    const active = isActive(path);
+    return {
+      ...styles.link,
+      backgroundColor: active ? '#e48a04' : 'transparent',
+      color: active ? 'white' : '#2c3e50',
+      fontWeight: active ? '600' : '500',
+    };
+  };
+
+  // Get user initials for profile circle
+  const getUserInitials = () => {
+    if (userProfile?.firstName && userProfile?.lastName) {
+      return `${userProfile.firstName[0]}${userProfile.lastName[0]}`.toUpperCase();
+    }
+    if (userProfile?.firstName) {
+      return userProfile.firstName[0].toUpperCase();
+    }
+    if (user?.email) {
+      return user.email[0].toUpperCase();
+    }
+    return 'U';
   };
 
   return (
@@ -28,14 +67,18 @@ function Navigation() {
         <li style={styles.listItem}>
           <Link 
             href="/" 
-            style={styles.link}
+            style={getLinkStyle('/')}
             onMouseEnter={(e) => {
-              e.target.style.backgroundColor = '#e48a04';
-              e.target.style.color = 'white';
+              if (!isActive('/')) {
+                e.target.style.backgroundColor = '#e48a04';
+                e.target.style.color = 'white';
+              }
             }}
             onMouseLeave={(e) => {
-              e.target.style.backgroundColor = 'transparent';
-              e.target.style.color = '#2c3e50';
+              if (!isActive('/')) {
+                e.target.style.backgroundColor = 'transparent';
+                e.target.style.color = '#2c3e50';
+              }
             }}
           >
             Home
@@ -47,14 +90,18 @@ function Navigation() {
             <li style={styles.listItem}>
               <Link 
                 href="/map" 
-                style={styles.link}
+                style={getLinkStyle('/map')}
                 onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = '#e48a04';
-                  e.target.style.color = 'white';
+                  if (!isActive('/map')) {
+                    e.target.style.backgroundColor = '#e48a04';
+                    e.target.style.color = 'white';
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = 'transparent';
-                  e.target.style.color = '#2c3e50';
+                  if (!isActive('/map')) {
+                    e.target.style.backgroundColor = 'transparent';
+                    e.target.style.color = '#2c3e50';
+                  }
                 }}
               >
                 Map
@@ -63,14 +110,18 @@ function Navigation() {
             <li style={styles.listItem}>
               <Link 
                 href="/incidents" 
-                style={styles.link}
+                style={getLinkStyle('/incidents')}
                 onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = '#e48a04';
-                  e.target.style.color = 'white';
+                  if (!isActive('/incidents')) {
+                    e.target.style.backgroundColor = '#e48a04';
+                    e.target.style.color = 'white';
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = 'transparent';
-                  e.target.style.color = '#2c3e50';
+                  if (!isActive('/incidents')) {
+                    e.target.style.backgroundColor = 'transparent';
+                    e.target.style.color = '#2c3e50';
+                  }
                 }}
               >
                 Incidents
@@ -79,14 +130,18 @@ function Navigation() {
             <li style={styles.listItem}>
               <Link 
                 href="/feed" 
-                style={styles.link}
+                style={getLinkStyle('/feed')}
                 onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = '#e48a04';
-                  e.target.style.color = 'white';
+                  if (!isActive('/feed')) {
+                    e.target.style.backgroundColor = '#e48a04';
+                    e.target.style.color = 'white';
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = 'transparent';
-                  e.target.style.color = '#2c3e50';
+                  if (!isActive('/feed')) {
+                    e.target.style.backgroundColor = 'transparent';
+                    e.target.style.color = '#2c3e50';
+                  }
                 }}
               >
                 Feed
@@ -95,14 +150,18 @@ function Navigation() {
             <li style={styles.listItem}>
               <Link 
                 href="/friends/search" 
-                style={styles.link}
+                style={getLinkStyle('/friends')}
                 onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = '#e48a04';
-                  e.target.style.color = 'white';
+                  if (!isActive('/friends')) {
+                    e.target.style.backgroundColor = '#e48a04';
+                    e.target.style.color = 'white';
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = 'transparent';
-                  e.target.style.color = '#2c3e50';
+                  if (!isActive('/friends')) {
+                    e.target.style.backgroundColor = 'transparent';
+                    e.target.style.color = '#2c3e50';
+                  }
                 }}
               >
                 Friends
@@ -111,14 +170,18 @@ function Navigation() {
             <li style={styles.listItem}>
               <Link 
                 href="/friends/chat" 
-                style={styles.link}
+                style={getLinkStyle('/friends/chat')}
                 onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = '#e48a04';
-                  e.target.style.color = 'white';
+                  if (!isActive('/friends/chat')) {
+                    e.target.style.backgroundColor = '#e48a04';
+                    e.target.style.color = 'white';
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = 'transparent';
-                  e.target.style.color = '#2c3e50';
+                  if (!isActive('/friends/chat')) {
+                    e.target.style.backgroundColor = 'transparent';
+                    e.target.style.color = '#2c3e50';
+                  }
                 }}
               >
                 Messages
@@ -127,33 +190,58 @@ function Navigation() {
             <li style={styles.listItem}>
               <Link 
                 href="/events" 
-                style={styles.link}
+                style={getLinkStyle('/events')}
                 onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = '#e48a04';
-                  e.target.style.color = 'white';
+                  if (!isActive('/events')) {
+                    e.target.style.backgroundColor = '#e48a04';
+                    e.target.style.color = 'white';
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = 'transparent';
-                  e.target.style.color = '#2c3e50';
+                  if (!isActive('/events')) {
+                    e.target.style.backgroundColor = 'transparent';
+                    e.target.style.color = '#2c3e50';
+                  }
                 }}
               >
                 Events
               </Link>
             </li>
+            {/* User Profile Circle */}
             <li style={styles.listItem}>
               <Link 
                 href="/profile" 
-                style={styles.link}
+                style={styles.profileLink}
+                title="Profile"
                 onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = '#e48a04';
-                  e.target.style.color = 'white';
+                  const circle = e.currentTarget.querySelector('div, img');
+                  if (circle) {
+                    circle.style.transform = 'scale(1.1)';
+                    circle.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = 'transparent';
-                  e.target.style.color = '#2c3e50';
+                  const circle = e.currentTarget.querySelector('div, img');
+                  if (circle) {
+                    circle.style.transform = 'scale(1)';
+                    circle.style.boxShadow = 'none';
+                  }
                 }}
               >
-                Profile
+                {userProfile?.photoURL ? (
+                  <img
+                    src={userProfile.photoURL}
+                    alt="Profile"
+                    style={{
+                      ...styles.profileCircle,
+                      objectFit: 'cover',
+                    }}
+                  />
+                ) : (
+                  <div style={styles.profileCircle}>
+                    <span style={styles.profileInitials}>{getUserInitials()}</span>
+                  </div>
+                )}
               </Link>
             </li>
             <li style={styles.listItem}>
@@ -178,14 +266,18 @@ function Navigation() {
             <li style={styles.listItem}>
               <Link 
                 href="/login" 
-                style={styles.link}
+                style={getLinkStyle('/login')}
                 onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = '#e48a04';
-                  e.target.style.color = 'white';
+                  if (!isActive('/login')) {
+                    e.target.style.backgroundColor = '#e48a04';
+                    e.target.style.color = 'white';
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = 'transparent';
-                  e.target.style.color = '#2c3e50';
+                  if (!isActive('/login')) {
+                    e.target.style.backgroundColor = 'transparent';
+                    e.target.style.color = '#2c3e50';
+                  }
                 }}
               >
                 Login
@@ -194,14 +286,18 @@ function Navigation() {
             <li style={styles.listItem}>
               <Link 
                 href="/signup" 
-                style={styles.link}
+                style={getLinkStyle('/signup')}
                 onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = '#e48a04';
-                  e.target.style.color = 'white';
+                  if (!isActive('/signup')) {
+                    e.target.style.backgroundColor = '#e48a04';
+                    e.target.style.color = 'white';
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = 'transparent';
-                  e.target.style.color = '#2c3e50';
+                  if (!isActive('/signup')) {
+                    e.target.style.backgroundColor = 'transparent';
+                    e.target.style.color = '#2c3e50';
+                  }
                 }}
               >
                 Sign Up
@@ -255,6 +351,34 @@ const styles = {
     border: 'none',
     backgroundColor: 'transparent',
     cursor: 'pointer',
+  },
+  profileLink: {
+    textDecoration: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '0',
+    borderRadius: '50%',
+    transition: 'all 0.3s ease',
+  },
+  profileCircle: {
+    width: '40px',
+    height: '40px',
+    borderRadius: '50%',
+    backgroundColor: '#e48a04',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    border: '2px solid #e48a04',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    overflow: 'hidden',
+  },
+  profileInitials: {
+    color: 'white',
+    fontSize: '0.9rem',
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
   }
 };
 
