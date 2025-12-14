@@ -27,23 +27,23 @@ const MapFilters = ({ filters, onFilterChange }) => {
   const availableTags = ['Safety', 'Community', 'Traffic', 'Weather', 'Events', 'Crime', 'Rent'];
 
   return (
-    <div className={`bg-white dark:bg-gray-800 shadow-lg transition-all duration-300 ${
+    <div className={`bg-base-100 shadow-lg transition-all duration-300 ${
       isOpen ? 'w-80' : 'w-16'
-    } flex flex-col border-r border-gray-200 dark:border-gray-700`}>
+    } flex flex-col border-r border-base-300`}>
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-        <h2 className={`font-bold text-xl text-gray-800 dark:text-gray-200 transition-opacity ${
+      <div className="p-4 border-b border-base-300 flex items-center justify-between">
+        <h2 className={`font-bold text-xl text-base-content transition-opacity ${
           isOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'
         }`}>
           Map Filters
         </h2>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          className="p-2 hover:bg-base-200 rounded-lg transition-colors"
           aria-label={isOpen ? 'Collapse sidebar' : 'Expand sidebar'}
         >
           <svg
-            className={`w-5 h-5 text-gray-600 dark:text-gray-300 transition-transform ${
+            className={`w-5 h-5 text-base-content/70 transition-transform ${
               isOpen ? '' : 'rotate-180'
             }`}
             fill="none"
@@ -59,7 +59,7 @@ const MapFilters = ({ filters, onFilterChange }) => {
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
           {/* Layer Toggles */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-base-content/70 mb-3 uppercase tracking-wide">
               Layers
             </h3>
             <div className="space-y-2">
@@ -86,7 +86,7 @@ const MapFilters = ({ filters, onFilterChange }) => {
 
           {/* Tag Filters */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-base-content/70 mb-3 uppercase tracking-wide">
               Filter by Tags
             </h3>
             <div className="flex flex-wrap gap-2">
@@ -96,8 +96,8 @@ const MapFilters = ({ filters, onFilterChange }) => {
                   onClick={() => handleTagToggle(tag)}
                   className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                     filters.tags.includes(tag)
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                      ? 'bg-primary text-primary-content'
+                      : 'bg-base-200 text-base-content hover:bg-base-300'
                   }`}
                 >
                   {tag}
@@ -113,10 +113,10 @@ const MapFilters = ({ filters, onFilterChange }) => {
 
 const LayerToggle = ({ label, checked, onChange, icon }) => {
   return (
-    <label className="flex items-center justify-between p-3 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+    <label className="flex items-center justify-between p-3 rounded-lg cursor-pointer hover:bg-base-200 transition-colors">
       <div className="flex items-center gap-3">
         <span className="text-xl">{icon}</span>
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
+        <span className="text-sm font-medium text-base-content">{label}</span>
       </div>
       <input
         type="checkbox"

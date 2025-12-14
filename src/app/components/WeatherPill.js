@@ -46,17 +46,17 @@ const WeatherPill = ({ zipcode, lat, lng }) => {
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-full px-4 py-2 shadow-lg flex items-center gap-2">
-        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-        <span className="text-sm text-gray-600 dark:text-gray-400">Loading...</span>
+      <div className="bg-base-100 rounded-full px-4 py-2 shadow-lg flex items-center gap-2">
+        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+        <span className="text-sm text-base-content/70">Loading...</span>
       </div>
     );
   }
 
   if (error || !weather) {
     return (
-      <div className="bg-red-100 dark:bg-red-900/30 rounded-full px-4 py-2 shadow-lg">
-        <span className="text-sm text-red-600 dark:text-red-400">Weather unavailable</span>
+      <div className="bg-error/10 rounded-full px-4 py-2 shadow-lg">
+        <span className="text-sm text-error">Weather unavailable</span>
       </div>
     );
   }
@@ -67,7 +67,7 @@ const WeatherPill = ({ zipcode, lat, lng }) => {
     <>
       <button
         onClick={() => setShowDetails(true)}
-        className="bg-white dark:bg-gray-800 rounded-full px-4 py-2 shadow-lg hover:shadow-xl transition-shadow flex items-center gap-3 cursor-pointer"
+        className="bg-base-100 rounded-full px-4 py-2 shadow-lg hover:shadow-xl transition-shadow flex items-center gap-3 cursor-pointer"
       >
         <img 
           src={weatherIconUrl} 
@@ -75,10 +75,10 @@ const WeatherPill = ({ zipcode, lat, lng }) => {
           className="w-10 h-10"
         />
         <div className="flex flex-col items-start">
-          <span className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+          <span className="text-lg font-semibold text-base-content">
             {weather.current.temperature_f}°F | {weather.current.temperature_c}°C
           </span>
-          <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+          <span className="text-xs text-base-content/60 capitalize">
             {weather.current.description}
           </span>
         </div>
@@ -121,21 +121,21 @@ const WeatherDetails = ({ weather, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-base-100 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 flex items-center justify-between">
+        <div className="sticky top-0 bg-base-100 border-b border-base-300 p-6 flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+            <h2 className="text-2xl font-bold text-base-content">
               {weather.current.location}
             </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Weather Details</p>
+            <p className="text-sm text-base-content/60">Weather Details</p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+            className="p-2 hover:bg-base-200 rounded-full transition-colors"
           >
             <svg
-              className="w-6 h-6 text-gray-600 dark:text-gray-300"
+              className="w-6 h-6 text-base-content/70"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -146,7 +146,7 @@ const WeatherDetails = ({ weather, onClose }) => {
         </div>
 
         {/* Current Weather */}
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="p-6 border-b border-base-300">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <img
@@ -155,13 +155,13 @@ const WeatherDetails = ({ weather, onClose }) => {
                 className="w-20 h-20"
               />
               <div>
-                <div className="text-5xl font-bold text-gray-800 dark:text-gray-200">
+                <div className="text-5xl font-bold text-base-content">
                   {weather.current.temperature_f}°F | {weather.current.temperature_c}°C
                 </div>
-                <div className="text-lg text-gray-600 dark:text-gray-400 capitalize">
+                <div className="text-lg text-base-content/70 capitalize">
                   {weather.current.description}
                 </div>
-                <div className="text-sm text-gray-500 dark:text-gray-500">
+                <div className="text-sm text-base-content/60">
                   Feels like {weather.current.feelsLike_f}°F | {weather.current.feelsLike_c}°C
                 </div>
               </div>
@@ -170,29 +170,29 @@ const WeatherDetails = ({ weather, onClose }) => {
 
           {/* Weather Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Humidity</div>
-              <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+            <div className="bg-base-200 rounded-lg p-3">
+              <div className="text-xs text-base-content/60 mb-1">Humidity</div>
+              <div className="text-lg font-semibold text-base-content">
                 {weather.current.humidity}%
               </div>
             </div>
-            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Wind Speed</div>
-              <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+            <div className="bg-base-200 rounded-lg p-3">
+              <div className="text-xs text-base-content/60 mb-1">Wind Speed</div>
+              <div className="text-lg font-semibold text-base-content">
                 {weather.current.windSpeed} mph
               </div>
             </div>
             {weather.current.visibility && (
-              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Visibility</div>
-                <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+              <div className="bg-base-200 rounded-lg p-3">
+                <div className="text-xs text-base-content/60 mb-1">Visibility</div>
+                <div className="text-lg font-semibold text-base-content">
                   {weather.current.visibility} mi
                 </div>
               </div>
             )}
-            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Pressure</div>
-              <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+            <div className="bg-base-200 rounded-lg p-3">
+              <div className="text-xs text-base-content/60 mb-1">Pressure</div>
+              <div className="text-lg font-semibold text-base-content">
                 {weather.current.pressure} hPa
               </div>
             </div>
@@ -202,17 +202,17 @@ const WeatherDetails = ({ weather, onClose }) => {
         {/* Hourly Forecast */}
         {weather.hourly && weather.hourly.length > 0 && (
           <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
+            <h3 className="text-lg font-semibold text-base-content mb-4">
               Hourly Forecast
             </h3>
             <div className="space-y-2">
               {weather.hourly.map((hour, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="flex items-center justify-between p-3 bg-base-200 rounded-lg hover:bg-base-300 transition-colors"
                 >
                   <div className="flex items-center gap-4 flex-1">
-                    <div className="w-24 text-sm text-gray-600 dark:text-gray-400">
+                    <div className="w-24 text-sm text-base-content/70">
                       {index === 0 ? 'Now' : formatTime(hour.time)}
                     </div>
                     <img
@@ -221,15 +221,15 @@ const WeatherDetails = ({ weather, onClose }) => {
                       className="w-10 h-10"
                     />
                     <div className="flex-1">
-                      <div className="text-sm font-medium text-gray-800 dark:text-gray-200 capitalize">
+                      <div className="text-sm font-medium text-base-content capitalize">
                         {hour.description}
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                      <div className="text-lg font-semibold text-base-content">
                         {hour.temperature}°F
                       </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                      <div className="text-xs text-base-content/60">
                         {hour.humidity}% • {hour.windSpeed} mph
                       </div>
                     </div>
