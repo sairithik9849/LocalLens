@@ -66,9 +66,11 @@ export function useGoogleMapsLoader(requiredLibraries = ['places', 'marker']) {
     };
     
     // Wait a bit to see if another component loads it
+    // Check window object directly instead of state to avoid stale closure
     const timeout = setTimeout(() => {
       clearInterval(checkInterval);
-      if (!isGoogleMapsLoaded) {
+      // Check again if Google Maps was loaded by another component
+      if (!checkGoogleMaps()) {
         loadApiKey();
       }
     }, 500);

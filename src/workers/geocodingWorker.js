@@ -1,7 +1,7 @@
 // src/workers/geocodingWorker.js
 import { getRabbitMQChannel } from '../lib/rabbitmq.js';
 import { storeGeocodingResult } from '../lib/geocodingQueue.js';
-import { zipcodeToCoords, zipcodeToCoordsGoogle, pincodeToCityAuto } from '../lib/geocoding.js';
+import { zipcodeToCoords, zipcodeToCoordsGoogle, pincodeToCityAuto, coordsToPincodeAuto } from '../lib/geocoding.js';
 import { getGoogleMapsApiKey } from '../lib/gistApiKey.js';
 
 let isShuttingDown = false;
@@ -13,11 +13,20 @@ let isShuttingDown = false;
  * @returns {Promise<any>} Geocoding result
  */
 async function processGeocodingJob(message, retryCount = 0) {
-  const { jobId, type, pincode } = message;
+  const { jobId, type, pincode, lat, lng } = message;
   const maxRetries = 3;
+  
+  // Calculate identifier for cleanup on failure
+  const identifier = type === 'reverse' 
+    ? `${Math.round(lat * 10000) / 10000}:${Math.round(lng * 10000) / 10000}`
+    : pincode;
 
   try {
-    console.log(`[Geocoding Worker] Processing job ${jobId} - Type: ${type}, Pincode: ${pincode}, Attempt: ${retryCount + 1}`);
+    if (type === 'reverse') {
+      console.log(`[Geocoding Worker] Processing job ${jobId} - Type: ${type}, Lat: ${lat}, Lng: ${lng}, Attempt: ${retryCount + 1}`);
+    } else {
+      console.log(`[Geocoding Worker] Processing job ${jobId} - Type: ${type}, Pincode: ${pincode}, Attempt: ${retryCount + 1}`);
+    }
 
     let result = null;
 
@@ -46,6 +55,14 @@ async function processGeocodingJob(message, retryCount = 0) {
         lat: result.lat,
         lng: result.lng,
       };
+    } else if (type === 'reverse') {
+      // Reverse geocode coordinates to pincode
+      result = await coordsToPincodeAuto(lat, lng);
+      if (!result) {
+        throw new Error('Pincode not found for coordinates');
+      }
+      // Result is a string (pincode)
+      result = result;
     } else {
       throw new Error(`Unknown geocoding type: ${type}`);
     }
@@ -64,8 +81,8 @@ async function processGeocodingJob(message, retryCount = 0) {
       await new Promise(resolve => setTimeout(resolve, delay));
       return processGeocodingJob(message, retryCount + 1);
     } else {
-      // Max retries reached, store failure
-      await storeGeocodingResult(jobId, 'failed', null, error.message);
+      // Max retries reached, store failure with identifier for cleanup
+      await storeGeocodingResult(jobId, 'failed', null, error.message, identifier, type, lat, lng);
       console.error(`[Geocoding Worker] ❌ Job ${jobId} failed after ${maxRetries} attempts`);
       throw error;
     }
@@ -121,20 +138,25 @@ async function startWorker() {
           console.log(`[Geocoding Worker] Received job ${message.jobId}`);
 
           // Update status to processing
-          await storeGeocodingResult(message.jobId, 'processing', null, null, message.pincode, message.type);
+          const identifier = message.type === 'reverse' 
+            ? `${Math.round(message.lat * 10000) / 10000}:${Math.round(message.lng * 10000) / 10000}`
+            : message.pincode;
+          await storeGeocodingResult(message.jobId, 'processing', null, null, identifier, message.type, message.lat, message.lng);
 
           // Process the job
           const result = await processGeocodingJob(message);
 
-          // Store result with pincode and type for caching
-          // Result is already in the correct format from processGeocodingJob
+          // Store result with identifier and type for caching
+          // For reverse geocoding, pass lat/lng for coordinate-based caching
           await storeGeocodingResult(
             message.jobId,
             'completed',
             result,
             null,
-            message.pincode,
-            message.type
+            identifier,
+            message.type,
+            message.lat,
+            message.lng
           );
 
           // Acknowledge message

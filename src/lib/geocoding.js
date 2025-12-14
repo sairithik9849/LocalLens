@@ -201,3 +201,82 @@ export async function pincodeToCityAuto(pincode) {
   }
 }
 
+/**
+ * Reverse geocode coordinates to get pincode (ZIP code)
+ * @param {number} lat - Latitude
+ * @param {number} lng - Longitude
+ * @param {string|null} apiKey - Optional Google Maps API key
+ * @returns {Promise<string|null>} Pincode (ZIP code) or null if not found
+ */
+export async function coordsToPincode(lat, lng, apiKey = null) {
+  try {
+    // Try Google Reverse Geocoding API first if API key is available
+    if (apiKey) {
+      try {
+        const response = await fetch(
+          `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.status === 'OK' && data.results.length > 0) {
+            // Look for postal_code in address components
+            for (const result of data.results) {
+              for (const component of result.address_components) {
+                if (component.types.includes('postal_code')) {
+                  return component.long_name;
+                }
+              }
+            }
+          }
+        }
+      } catch (googleError) {
+        console.warn('Google Reverse Geocoding failed, trying OpenStreetMap:', googleError);
+      }
+    }
+    
+    // Fallback to OpenStreetMap Nominatim (free, no API key required)
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`,
+      {
+        headers: {
+          'User-Agent': 'LocalLens/1.0', // Required by Nominatim
+        },
+      }
+    );
+    
+    if (!response.ok) {
+      throw new Error('Reverse geocoding API error');
+    }
+    
+    const data = await response.json();
+    
+    if (data && data.address && data.address.postcode) {
+      return data.address.postcode;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error getting pincode from coordinates:', error);
+    return null;
+  }
+}
+
+/**
+ * Reverse geocode coordinates to get pincode (with automatic API key fetching)
+ * @param {number} lat - Latitude
+ * @param {number} lng - Longitude
+ * @returns {Promise<string|null>} Pincode (ZIP code) or null if not found
+ */
+export async function coordsToPincodeAuto(lat, lng) {
+  try {
+    // Try to get Google Maps API key from Gist
+    const apiKey = await getGoogleMapsApiKey();
+    return await coordsToPincode(lat, lng, apiKey || null);
+  } catch (error) {
+    // If API key fetch fails, use OpenStreetMap
+    return await coordsToPincode(lat, lng, null);
+  }
+}
+

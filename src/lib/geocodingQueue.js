@@ -4,6 +4,15 @@ import { getRabbitMQChannel } from './rabbitmq.js';
 import { getRedisClient } from './redis.js';
 
 /**
+ * Round coordinates to 4 decimal places (≈11m precision) for caching
+ * @param {number} coord - Coordinate (lat or lng)
+ * @returns {number} Rounded coordinate
+ */
+function roundCoordinate(coord) {
+  return Math.round(coord * 10000) / 10000;
+}
+
+/**
  * Get cached geocoding result by pincode and type
  * @param {string} pincode - ZIP code
  * @param {string} type - Type of geocoding: 'city' or 'coords'
@@ -17,6 +26,39 @@ async function getCachedGeocodingByPincode(pincode, type) {
     }
 
     const cacheKey = `geocoding:cache:${type}:${pincode}`;
+    const cachedData = await redisClient.get(cacheKey);
+    
+    if (!cachedData) {
+      return null;
+    }
+
+    const parsed = JSON.parse(cachedData);
+    return {
+      status: 'completed',
+      result: parsed.result,
+    };
+  } catch (error) {
+    return null;
+  }
+}
+
+/**
+ * Get cached geocoding result by coordinates (for reverse geocoding)
+ * @param {number} lat - Latitude
+ * @param {number} lng - Longitude
+ * @returns {Promise<{status: string, result?: any} | null>} Cached result or null
+ */
+async function getCachedGeocodingByCoords(lat, lng) {
+  try {
+    const redisClient = await getRedisClient();
+    if (!redisClient) {
+      return null;
+    }
+
+    // Round coordinates to 4 decimal places for cache key
+    const roundedLat = roundCoordinate(lat);
+    const roundedLng = roundCoordinate(lng);
+    const cacheKey = `geocoding:cache:reverse:${roundedLat}:${roundedLng}`;
     const cachedData = await redisClient.get(cacheKey);
     
     if (!cachedData) {
@@ -58,20 +100,47 @@ async function cacheGeocodingByPincode(pincode, type, result) {
 }
 
 /**
- * Get or create an in-progress job ID for a pincode+type
+ * Store geocoding result in coordinate-based cache (for reverse geocoding)
+ * @param {number} lat - Latitude
+ * @param {number} lng - Longitude
+ * @param {any} result - Result data (pincode string)
+ */
+async function cacheGeocodingByCoords(lat, lng, result) {
+  try {
+    const redisClient = await getRedisClient();
+    if (!redisClient) {
+      return;
+    }
+
+    // Round coordinates to 4 decimal places for cache key
+    const roundedLat = roundCoordinate(lat);
+    const roundedLng = roundCoordinate(lng);
+    const cacheKey = `geocoding:cache:reverse:${roundedLat}:${roundedLng}`;
+    await redisClient.setEx(
+      cacheKey,
+      86400, // 24 hours TTL (pincode for a location doesn't change frequently)
+      JSON.stringify({ result, cachedAt: Math.floor(Date.now() / 1000) })
+    );
+  } catch (error) {
+    // Silently fail - caching is optional
+  }
+}
+
+/**
+ * Get or create an in-progress job ID for a pincode+type or coordinates
  * Returns existing job ID if one is already in progress, otherwise creates a new one
- * @param {string} pincode - ZIP code
- * @param {string} type - Type of geocoding: 'city' or 'coords'
+ * @param {string|number} identifier - ZIP code (string) or rounded coordinate key (string) for reverse
+ * @param {string} type - Type of geocoding: 'city', 'coords', or 'reverse'
  * @returns {Promise<{jobId: string, isNew: boolean} | null>} Job ID and whether it's new
  */
-async function getOrCreateInProgressJob(pincode, type) {
+async function getOrCreateInProgressJob(identifier, type) {
   try {
     const redisClient = await getRedisClient();
     if (!redisClient) {
       return null;
     }
 
-    const inProgressKey = `geocoding:inprogress:${type}:${pincode}`;
+    const inProgressKey = `geocoding:inprogress:${type}:${identifier}`;
     
     // Try to get existing in-progress job
     const existingJobData = await redisClient.get(inProgressKey);
@@ -80,7 +149,7 @@ async function getOrCreateInProgressJob(pincode, type) {
       // Check if job is still valid (not expired)
       const now = Math.floor(Date.now() / 1000);
       if (now - parsed.timestamp < 300) { // 5 minutes max
-        console.log(`[Queue] 🔄 Reusing existing job - Job: ${parsed.jobId}, Pincode: ${pincode}, Type: ${type}`);
+        console.log(`[Queue] 🔄 Reusing existing job - Job: ${parsed.jobId}, Identifier: ${identifier}, Type: ${type}`);
         return { jobId: parsed.jobId, isNew: false };
       }
       // Job expired, remove it
@@ -94,7 +163,7 @@ async function getOrCreateInProgressJob(pincode, type) {
       300, // 5 minutes TTL (should complete much faster)
       JSON.stringify({
         jobId,
-        pincode,
+        identifier,
         type,
         timestamp: Math.floor(Date.now() / 1000),
       })
@@ -109,17 +178,17 @@ async function getOrCreateInProgressJob(pincode, type) {
 
 /**
  * Remove in-progress job tracking
- * @param {string} pincode - ZIP code
- * @param {string} type - Type of geocoding: 'city' or 'coords'
+ * @param {string|number} identifier - ZIP code (string) or rounded coordinate key (string) for reverse
+ * @param {string} type - Type of geocoding: 'city', 'coords', or 'reverse'
  */
-async function removeInProgressJob(pincode, type) {
+async function removeInProgressJob(identifier, type) {
   try {
     const redisClient = await getRedisClient();
     if (!redisClient) {
       return;
     }
 
-    const inProgressKey = `geocoding:inprogress:${type}:${pincode}`;
+    const inProgressKey = `geocoding:inprogress:${type}:${identifier}`;
     await redisClient.del(inProgressKey);
   } catch (error) {
     // Silently fail
@@ -128,15 +197,31 @@ async function removeInProgressJob(pincode, type) {
 
 /**
  * Publish geocoding job to RabbitMQ queue
- * @param {string} pincode - ZIP code to geocode
- * @param {string} type - Type of geocoding: 'city' or 'coords'
+ * @param {string|number} identifier - ZIP code (string) for forward geocoding, or lat/lng (numbers) for reverse
+ * @param {string} type - Type of geocoding: 'city', 'coords', or 'reverse'
  * @param {Object} [metadata] - Optional metadata (userId, requestId, etc.)
+ * @param {number} [lat] - Latitude (required for reverse geocoding)
+ * @param {number} [lng] - Longitude (required for reverse geocoding)
  * @returns {Promise<{jobId: string, status: string, cached?: boolean}>} Job ID and status
  */
-export async function publishGeocodingJob(pincode, type, metadata = {}) {
+export async function publishGeocodingJob(identifier, type, metadata = {}, lat = null, lng = null) {
   try {
-    // Check if we already have a cached result for this pincode
-    const cached = await getCachedGeocodingByPincode(pincode, type);
+    let cached = null;
+    let cacheIdentifier = null;
+
+    // Check cache based on type
+    if (type === 'reverse' && lat !== null && lng !== null) {
+      // Reverse geocoding: check coordinate-based cache
+      cached = await getCachedGeocodingByCoords(lat, lng);
+      const roundedLat = roundCoordinate(lat);
+      const roundedLng = roundCoordinate(lng);
+      cacheIdentifier = `${roundedLat}:${roundedLng}`;
+    } else {
+      // Forward geocoding: check pincode-based cache
+      cached = await getCachedGeocodingByPincode(identifier, type);
+      cacheIdentifier = identifier;
+    }
+
     if (cached && cached.status === 'completed') {
       // Return a job ID that points to the cached result
       const jobId = randomUUID();
@@ -154,29 +239,30 @@ export async function publishGeocodingJob(pincode, type, metadata = {}) {
           })
         );
       }
-      console.log(`[Queue] 💾 Cache hit - Pincode: ${pincode}, Type: ${type} (skipping RabbitMQ)`);
+      console.log(`[Queue] 💾 Cache hit - Identifier: ${cacheIdentifier}, Type: ${type} (skipping RabbitMQ)`);
       return {
         jobId,
         status: 'completed',
         cached: true,
+        result: cached.result, // Include result for immediate use
       };
     }
 
-    // Check if there's already a job in progress for this pincode+type
-    const inProgress = await getOrCreateInProgressJob(pincode, type);
+    // Check if there's already a job in progress
+    const inProgress = await getOrCreateInProgressJob(cacheIdentifier, type);
     
     if (inProgress && !inProgress.isNew) {
       // Job already in progress, check if it's completed
       const existingResult = await getGeocodingResult(inProgress.jobId);
       if (existingResult && existingResult.status === 'completed') {
-        console.log(`[Queue] ✅ Reused job already completed - Job: ${inProgress.jobId}, Pincode: ${pincode}, Type: ${type}`);
+        console.log(`[Queue] ✅ Reused job already completed - Job: ${inProgress.jobId}, Identifier: ${cacheIdentifier}, Type: ${type}`);
         return {
           jobId: inProgress.jobId,
           status: 'completed',
         };
       }
       // Job still in progress, return existing job ID
-      console.log(`[Queue] ♻️  Reusing in-progress job - Job: ${inProgress.jobId}, Pincode: ${pincode}, Type: ${type}`);
+      console.log(`[Queue] ♻️  Reusing in-progress job - Job: ${inProgress.jobId}, Identifier: ${cacheIdentifier}, Type: ${type}`);
       return {
         jobId: inProgress.jobId,
         status: existingResult?.status || 'queued',
@@ -195,11 +281,18 @@ export async function publishGeocodingJob(pincode, type, metadata = {}) {
     // Create message
     const message = {
       jobId,
-      type, // 'city' or 'coords'
-      pincode,
+      type, // 'city', 'coords', or 'reverse'
       metadata,
       timestamp: Math.floor(Date.now() / 1000),
     };
+
+    // Add type-specific fields
+    if (type === 'reverse') {
+      message.lat = lat;
+      message.lng = lng;
+    } else {
+      message.pincode = identifier;
+    }
 
     // Publish to queue
     await channel.publish(
@@ -227,9 +320,9 @@ export async function publishGeocodingJob(pincode, type, metadata = {}) {
     }
 
     if (inProgress && inProgress.isNew) {
-      console.log(`[Queue] 📨 Published NEW job to RabbitMQ - Job: ${jobId}, Type: ${type}, Pincode: ${pincode} (one job per pincode)`);
+      console.log(`[Queue] 📨 Published NEW job to RabbitMQ - Job: ${jobId}, Type: ${type}, Identifier: ${cacheIdentifier} (one job per identifier)`);
     } else {
-      console.log(`[Queue] 📨 Published to RabbitMQ - Job: ${jobId}, Type: ${type}, Pincode: ${pincode}`);
+      console.log(`[Queue] 📨 Published to RabbitMQ - Job: ${jobId}, Type: ${type}, Identifier: ${cacheIdentifier}`);
     }
 
     return {
@@ -237,7 +330,7 @@ export async function publishGeocodingJob(pincode, type, metadata = {}) {
       status: 'queued',
     };
   } catch (error) {
-    console.warn(`[Queue] ❌ Error publishing to RabbitMQ - Pincode: ${pincode}, Error: ${error.message}`);
+    console.warn(`[Queue] ❌ Error publishing to RabbitMQ - Identifier: ${identifier}, Type: ${type}, Error: ${error.message}`);
     throw error;
   }
 }
@@ -271,12 +364,14 @@ export async function getGeocodingResult(jobId) {
  * Store geocoding result in Redis
  * @param {string} jobId - Job ID
  * @param {string} status - Status: 'completed' or 'failed'
- * @param {any} result - Result data (city string or {lat, lng} object)
+ * @param {any} result - Result data (city string, {lat, lng} object, or pincode string)
  * @param {string} [error] - Error message if failed
- * @param {string} [pincode] - Pincode for caching (optional)
- * @param {string} [type] - Type for caching (optional)
+ * @param {string|number} [identifier] - Pincode (string) or rounded coordinate key (string) for caching (optional)
+ * @param {string} [type] - Type for caching: 'city', 'coords', or 'reverse' (optional)
+ * @param {number} [lat] - Latitude (required for reverse geocoding caching)
+ * @param {number} [lng] - Longitude (required for reverse geocoding caching)
  */
-export async function storeGeocodingResult(jobId, status, result = null, error = null, pincode = null, type = null) {
+export async function storeGeocodingResult(jobId, status, result = null, error = null, identifier = null, type = null, lat = null, lng = null) {
   try {
     const redisClient = await getRedisClient();
     if (!redisClient) {
@@ -298,14 +393,20 @@ export async function storeGeocodingResult(jobId, status, result = null, error =
       JSON.stringify(resultData)
     );
 
-    // Also cache by pincode+type for future lookups (only if successful)
-    if (status === 'completed' && result && pincode && type) {
-      await cacheGeocodingByPincode(pincode, type, result);
+    // Also cache by identifier+type for future lookups (only if successful)
+    if (status === 'completed' && result && identifier && type) {
+      if (type === 'reverse' && lat !== null && lng !== null) {
+        // Cache by coordinates for reverse geocoding
+        await cacheGeocodingByCoords(lat, lng, result);
+      } else if (type === 'city' || type === 'coords') {
+        // Cache by pincode for forward geocoding
+        await cacheGeocodingByPincode(identifier, type, result);
+      }
     }
 
     // Remove in-progress tracking when job completes or fails
-    if ((status === 'completed' || status === 'failed') && pincode && type) {
-      await removeInProgressJob(pincode, type);
+    if ((status === 'completed' || status === 'failed') && identifier && type) {
+      await removeInProgressJob(identifier, type);
     }
 
     console.log(`[Geocoding Queue] Stored result for job ${jobId} - Status: ${status}`);
