@@ -1,7 +1,7 @@
 // src/workers/geocodingWorker.js
 import { getRabbitMQChannel } from '../lib/rabbitmq.js';
 import { storeGeocodingResult } from '../lib/geocodingQueue.js';
-import { zipcodeToCoords, zipcodeToCoordsGoogle, pincodeToCityAuto, coordsToPincodeAuto } from '../lib/geocoding.js';
+import { zipcodeToCoords, zipcodeToCoordsGoogle, pincodeToCityAuto, coordsToPincodeAuto, coordsToAddressAuto } from '../lib/geocoding.js';
 import { getGoogleMapsApiKey } from '../lib/gistApiKey.js';
 
 let isShuttingDown = false;
@@ -17,12 +17,12 @@ async function processGeocodingJob(message, retryCount = 0) {
   const maxRetries = 3;
   
   // Calculate identifier for cleanup on failure
-  const identifier = type === 'reverse' 
+  const identifier = (type === 'reverse' || type === 'reverse-address')
     ? `${Math.round(lat * 10000) / 10000}:${Math.round(lng * 10000) / 10000}`
     : pincode;
 
   try {
-    if (type === 'reverse') {
+    if (type === 'reverse' || type === 'reverse-address') {
       console.log(`[Geocoding Worker] Processing job ${jobId} - Type: ${type}, Lat: ${lat}, Lng: ${lng}, Attempt: ${retryCount + 1}`);
     } else {
       console.log(`[Geocoding Worker] Processing job ${jobId} - Type: ${type}, Pincode: ${pincode}, Attempt: ${retryCount + 1}`);
@@ -62,6 +62,14 @@ async function processGeocodingJob(message, retryCount = 0) {
         throw new Error('Pincode not found for coordinates');
       }
       // Result is a string (pincode)
+      result = result;
+    } else if (type === 'reverse-address') {
+      // Reverse geocode coordinates to address
+      result = await coordsToAddressAuto(lat, lng);
+      if (!result) {
+        throw new Error('Address not found for coordinates');
+      }
+      // Result is a string (formatted address)
       result = result;
     } else {
       throw new Error(`Unknown geocoding type: ${type}`);
@@ -138,7 +146,7 @@ async function startWorker() {
           console.log(`[Geocoding Worker] Received job ${message.jobId}`);
 
           // Update status to processing
-          const identifier = message.type === 'reverse' 
+          const identifier = (message.type === 'reverse' || message.type === 'reverse-address')
             ? `${Math.round(message.lat * 10000) / 10000}:${Math.round(message.lng * 10000) / 10000}`
             : message.pincode;
           await storeGeocodingResult(message.jobId, 'processing', null, null, identifier, message.type, message.lat, message.lng);

@@ -22,6 +22,8 @@ export default function EventDetailPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [locationAddress, setLocationAddress] = useState(null);
+  const [locationAddressLoading, setLocationAddressLoading] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -80,6 +82,38 @@ export default function EventDetailPage() {
 
     fetchEvent();
   }, [user, authLoading, router, eventId]);
+
+  // Fetch address when event data is loaded
+  useEffect(() => {
+    if (!event || !event.location?.lat || !event.location?.lng) {
+      setLocationAddress(null);
+      return;
+    }
+
+    const fetchAddress = async () => {
+      try {
+        setLocationAddressLoading(true);
+        const response = await fetch(
+          `/api/geocoding/reverse-address?lat=${event.location.lat}&lng=${event.location.lng}`
+        );
+        const data = await response.json();
+
+        if (response.ok && data.success && data.address) {
+          setLocationAddress(data.address);
+        } else {
+          // If address lookup fails, keep address as null to show coordinates
+          setLocationAddress(null);
+        }
+      } catch (error) {
+        console.error('Error fetching address:', error);
+        setLocationAddress(null);
+      } finally {
+        setLocationAddressLoading(false);
+      }
+    };
+
+    fetchAddress();
+  }, [event]);
 
   const handleRSVP = async (status) => {
     if (!user || !eventId) return;
@@ -391,9 +425,18 @@ export default function EventDetailPage() {
                   <label className="text-xs font-semibold text-base-content/60 uppercase tracking-wider mb-2 block">
                     Location
                   </label>
-                  <p className="text-base text-base-content font-mono">
-                    {event.location?.lat?.toFixed(6)}, {event.location?.lng?.toFixed(6)}
-                  </p>
+                  {locationAddressLoading ? (
+                    <div className="flex items-center gap-2">
+                      <span className="loading loading-spinner loading-sm"></span>
+                      <p className="text-base text-base-content/60">Loading address...</p>
+                    </div>
+                  ) : locationAddress ? (
+                    <p className="text-base text-base-content">{locationAddress}</p>
+                  ) : (
+                    <p className="text-base text-base-content font-mono">
+                      {event.location?.lat?.toFixed(6)}, {event.location?.lng?.toFixed(6)}
+                    </p>
+                  )}
                   <a
                     href={`https://www.google.com/maps?q=${event.location?.lat},${event.location?.lng}`}
                     target="_blank"

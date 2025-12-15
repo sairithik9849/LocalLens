@@ -46,9 +46,10 @@ async function getCachedGeocodingByPincode(pincode, type) {
  * Get cached geocoding result by coordinates (for reverse geocoding)
  * @param {number} lat - Latitude
  * @param {number} lng - Longitude
+ * @param {string} type - Type of reverse geocoding: 'reverse' or 'reverse-address'
  * @returns {Promise<{status: string, result?: any} | null>} Cached result or null
  */
-async function getCachedGeocodingByCoords(lat, lng) {
+async function getCachedGeocodingByCoords(lat, lng, type = 'reverse') {
   try {
     const redisClient = await getRedisClient();
     if (!redisClient) {
@@ -58,7 +59,7 @@ async function getCachedGeocodingByCoords(lat, lng) {
     // Round coordinates to 4 decimal places for cache key
     const roundedLat = roundCoordinate(lat);
     const roundedLng = roundCoordinate(lng);
-    const cacheKey = `geocoding:cache:reverse:${roundedLat}:${roundedLng}`;
+    const cacheKey = `geocoding:cache:${type}:${roundedLat}:${roundedLng}`;
     const cachedData = await redisClient.get(cacheKey);
     
     if (!cachedData) {
@@ -103,9 +104,10 @@ async function cacheGeocodingByPincode(pincode, type, result) {
  * Store geocoding result in coordinate-based cache (for reverse geocoding)
  * @param {number} lat - Latitude
  * @param {number} lng - Longitude
- * @param {any} result - Result data (pincode string)
+ * @param {any} result - Result data (pincode string or address string)
+ * @param {string} type - Type of reverse geocoding: 'reverse' or 'reverse-address'
  */
-async function cacheGeocodingByCoords(lat, lng, result) {
+async function cacheGeocodingByCoords(lat, lng, result, type = 'reverse') {
   try {
     const redisClient = await getRedisClient();
     if (!redisClient) {
@@ -115,10 +117,10 @@ async function cacheGeocodingByCoords(lat, lng, result) {
     // Round coordinates to 4 decimal places for cache key
     const roundedLat = roundCoordinate(lat);
     const roundedLng = roundCoordinate(lng);
-    const cacheKey = `geocoding:cache:reverse:${roundedLat}:${roundedLng}`;
+    const cacheKey = `geocoding:cache:${type}:${roundedLat}:${roundedLng}`;
     await redisClient.setEx(
       cacheKey,
-      86400, // 24 hours TTL (pincode for a location doesn't change frequently)
+      86400, // 24 hours TTL (address/pincode for a location doesn't change frequently)
       JSON.stringify({ result, cachedAt: Math.floor(Date.now() / 1000) })
     );
   } catch (error) {
@@ -130,7 +132,7 @@ async function cacheGeocodingByCoords(lat, lng, result) {
  * Get or create an in-progress job ID for a pincode+type or coordinates
  * Returns existing job ID if one is already in progress, otherwise creates a new one
  * @param {string|number} identifier - ZIP code (string) or rounded coordinate key (string) for reverse
- * @param {string} type - Type of geocoding: 'city', 'coords', or 'reverse'
+ * @param {string} type - Type of geocoding: 'city', 'coords', 'reverse', or 'reverse-address'
  * @returns {Promise<{jobId: string, isNew: boolean} | null>} Job ID and whether it's new
  */
 async function getOrCreateInProgressJob(identifier, type) {
@@ -179,7 +181,7 @@ async function getOrCreateInProgressJob(identifier, type) {
 /**
  * Remove in-progress job tracking
  * @param {string|number} identifier - ZIP code (string) or rounded coordinate key (string) for reverse
- * @param {string} type - Type of geocoding: 'city', 'coords', or 'reverse'
+ * @param {string} type - Type of geocoding: 'city', 'coords', 'reverse', or 'reverse-address'
  */
 async function removeInProgressJob(identifier, type) {
   try {
@@ -198,7 +200,7 @@ async function removeInProgressJob(identifier, type) {
 /**
  * Publish geocoding job to RabbitMQ queue
  * @param {string|number} identifier - ZIP code (string) for forward geocoding, or lat/lng (numbers) for reverse
- * @param {string} type - Type of geocoding: 'city', 'coords', or 'reverse'
+ * @param {string} type - Type of geocoding: 'city', 'coords', 'reverse', or 'reverse-address'
  * @param {Object} [metadata] - Optional metadata (userId, requestId, etc.)
  * @param {number} [lat] - Latitude (required for reverse geocoding)
  * @param {number} [lng] - Longitude (required for reverse geocoding)
@@ -210,9 +212,9 @@ export async function publishGeocodingJob(identifier, type, metadata = {}, lat =
     let cacheIdentifier = null;
 
     // Check cache based on type
-    if (type === 'reverse' && lat !== null && lng !== null) {
+    if ((type === 'reverse' || type === 'reverse-address') && lat !== null && lng !== null) {
       // Reverse geocoding: check coordinate-based cache
-      cached = await getCachedGeocodingByCoords(lat, lng);
+      cached = await getCachedGeocodingByCoords(lat, lng, type);
       const roundedLat = roundCoordinate(lat);
       const roundedLng = roundCoordinate(lng);
       cacheIdentifier = `${roundedLat}:${roundedLng}`;
@@ -281,13 +283,13 @@ export async function publishGeocodingJob(identifier, type, metadata = {}, lat =
     // Create message
     const message = {
       jobId,
-      type, // 'city', 'coords', or 'reverse'
+      type, // 'city', 'coords', 'reverse', or 'reverse-address'
       metadata,
       timestamp: Math.floor(Date.now() / 1000),
     };
 
     // Add type-specific fields
-    if (type === 'reverse') {
+    if (type === 'reverse' || type === 'reverse-address') {
       message.lat = lat;
       message.lng = lng;
     } else {
@@ -367,7 +369,7 @@ export async function getGeocodingResult(jobId) {
  * @param {any} result - Result data (city string, {lat, lng} object, or pincode string)
  * @param {string} [error] - Error message if failed
  * @param {string|number} [identifier] - Pincode (string) or rounded coordinate key (string) for caching (optional)
- * @param {string} [type] - Type for caching: 'city', 'coords', or 'reverse' (optional)
+ * @param {string} [type] - Type for caching: 'city', 'coords', 'reverse', or 'reverse-address' (optional)
  * @param {number} [lat] - Latitude (required for reverse geocoding caching)
  * @param {number} [lng] - Longitude (required for reverse geocoding caching)
  */
@@ -395,9 +397,9 @@ export async function storeGeocodingResult(jobId, status, result = null, error =
 
     // Also cache by identifier+type for future lookups (only if successful)
     if (status === 'completed' && result && identifier && type) {
-      if (type === 'reverse' && lat !== null && lng !== null) {
+      if ((type === 'reverse' || type === 'reverse-address') && lat !== null && lng !== null) {
         // Cache by coordinates for reverse geocoding
-        await cacheGeocodingByCoords(lat, lng, result);
+        await cacheGeocodingByCoords(lat, lng, result, type);
       } else if (type === 'city' || type === 'coords') {
         // Cache by pincode for forward geocoding
         await cacheGeocodingByPincode(identifier, type, result);
