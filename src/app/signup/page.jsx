@@ -26,7 +26,7 @@ export default function SignupPage() {
   useEffect(() => {
     // Redirect authenticated users away from signup page
     if (!authLoading && user) {
-      router.replace("/dashboard");
+      router.replace("/feed");
     }
   }, [user, authLoading, router]);
 
@@ -51,8 +51,8 @@ export default function SignupPage() {
 
     try {
       await signup(email, password);
-      // Redirect to dashboard - it will check profile completeness and redirect to setup if needed
-      router.push("/dashboard");
+      // Redirect to feed - it will check profile completeness and redirect to setup if needed
+      router.push("/feed");
     } catch (err) {
       setError(getAuthErrorMessage(err));
       setLoading(false);
@@ -65,8 +65,8 @@ export default function SignupPage() {
 
     try {
       await signInWithGoogle();
-      // Redirect to dashboard - it will check profile completeness and redirect to setup if needed
-      router.push("/dashboard");
+      // Redirect to feed - it will check profile completeness and redirect to setup if needed
+      router.push("/feed");
     } catch (err) {
       setError(getAuthErrorMessage(err));
       setLoading(false);

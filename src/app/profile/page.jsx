@@ -7,6 +7,7 @@ import { useAuth } from "@/firebase/AuthContext";
 import { validatePincode } from "@/lib/pincodeValidation.js";
 import { validateNameField, validateCity } from "@/lib/userProfileCheck.js";
 import { sanitizeBio, sanitizeQuote } from "@/lib/sanitizeInput.js";
+import Navigation from "@/app/components/Navigation";
 
 export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
@@ -150,12 +151,48 @@ export default function ProfilePage() {
         } catch (parseError) {
           console.error('Error parsing geocoding response:', parseError);
           setCityError('Failed to fetch city. Please enter manually.');
+          setFetchingCity(false);
           return;
         }
         
-        if (response.ok && data.city) {
+        // Handle async queue response (202 Accepted)
+        if (response.status === 202 && data.jobId) {
+          // Job queued, poll for result
+          const jobId = data.jobId;
+          let attempts = 0;
+          const maxAttempts = 20; // 20 seconds max wait
+          let result = null;
+
+          while (attempts < maxAttempts && !result) {
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+            
+            const statusResponse = await fetch(`/api/geocoding/status/${jobId}`);
+            const statusData = await statusResponse.json();
+
+            if (statusData.status === 'completed' && statusData.result?.city) {
+              result = statusData.result.city;
+              setCity(result);
+              setError('');
+              setCityError('');
+              break;
+            } else if (statusData.status === 'failed') {
+              setCity('');
+              setError('City not found automatically. Please enter manually.');
+              break;
+            }
+
+            attempts++;
+          }
+
+          if (!result && attempts >= maxAttempts) {
+            setCity('');
+            setError('City lookup timed out. Please enter manually.');
+          }
+        } else if (response.ok && data.city) {
+          // Direct result (fallback mode)
           setCity(data.city);
           setError('');
+          setCityError('');
         } else {
           // City not found, but allow manual entry
           setCity('');
@@ -374,35 +411,44 @@ export default function ProfilePage() {
   // Show loading state while auth is loading or profile is fetching
   if (authLoading || loading) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center bg-base-200"
-      >
-        <div className="text-center">
-          <span className="loading loading-spinner loading-lg text-primary"></span>
-          <p className="text-base-content mt-4">
-            {authLoading ? "Checking authentication..." : "Loading profile..."}
-          </p>
+      <>
+        <Navigation />
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <span className="loading loading-spinner loading-lg text-primary"></span>
+            <p className="text-base-content mt-4">
+              {authLoading ? "Checking authentication..." : "Loading profile..."}
+            </p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   // If not authenticated, will redirect via useEffect
   if (!user) {
-    return null;
+    return (
+      <>
+        <Navigation />
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <p className="text-gray-600">Please log in to view your profile.</p>
+        </div>
+      </>
+    );
   }
 
   // Show loading state if profile hasn't loaded yet
   if (!userProfile) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center bg-base-200"
-      >
-        <div className="text-center">
-          <span className="loading loading-spinner loading-lg text-primary"></span>
-          <p className="text-base-content mt-4">Loading profile...</p>
+      <>
+        <Navigation />
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <span className="loading loading-spinner loading-lg text-primary"></span>
+            <p className="text-base-content mt-4">Loading profile...</p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
@@ -421,88 +467,91 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-base-200 py-8">
-      <div className="w-full max-w-2xl mx-auto px-4">
-        <div className="card shadow-2xl bg-base-100 border border-base-300">
-          <div className="card-body p-6">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+    <>
+      <Navigation />
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 py-8 lg:py-12">
+          {/* Header Section */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-4">
                 {userProfile?.photoURL ? (
                   <img
                     src={userProfile.photoURL}
                     alt="Profile"
-                    className="w-16 h-16 rounded-full border-2 border-primary object-cover"
+                    className="w-20 h-20 rounded-full border-2 border-primary object-cover shadow-md"
                   />
                 ) : (
-                  <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center border-2 border-primary">
-                    <span className="text-primary-content text-2xl font-bold">
+                  <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center border-2 border-primary shadow-md">
+                    <span className="text-primary-content text-3xl font-bold">
                       {userProfile?.firstName?.[0]?.toUpperCase() || userProfile?.lastName?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
                     </span>
                   </div>
                 )}
                 <div>
-                  <h1 className="text-3xl font-bold text-base-content">
+                  <h1 className="text-3xl font-bold text-gray-900">
                     {userProfile.firstName && userProfile.lastName
                       ? `${userProfile.firstName} ${userProfile.lastName}`
                       : "My Profile"}
                   </h1>
-                  <p className="text-base-content/70 text-sm">{user.email}</p>
+                  <p className="text-gray-600 text-sm mt-1">{user.email}</p>
                 </div>
               </div>
               {!isEditing && (
                 <button
                   onClick={handleEdit}
-                  className="btn btn-sm btn-primary font-semibold"
+                  className="btn btn-primary font-semibold hover:scale-105 transition-transform"
                 >
                   Edit Profile
                 </button>
               )}
             </div>
+          </div>
 
-            {/* Success Message */}
-            {success && (
-              <div className="alert alert-success mb-3">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="stroke-current shrink-0 h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <span className="text-sm">{success}</span>
-              </div>
-            )}
+          {/* Success Message */}
+          {success && (
+            <div className="alert alert-success mb-6">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="stroke-current shrink-0 h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span className="text-sm">{success}</span>
+            </div>
+          )}
 
-            {/* Error Message */}
-            {error && (
-              <div className="alert alert-error mb-3">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="stroke-current shrink-0 h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <span className="text-sm">{error}</span>
-              </div>
-            )}
+          {/* Error Message */}
+          {error && (
+            <div className="alert alert-error mb-6">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="stroke-current shrink-0 h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span className="text-sm">{error}</span>
+            </div>
+          )}
 
-            {isEditing ? (
-              /* Edit Mode Form */
-              <form onSubmit={handleSubmit} className="space-y-4">
+          {isEditing ? (
+            /* Edit Mode Form */
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="form-control">
                     <label htmlFor="profile-firstname" className="label pb-1.5">
@@ -544,8 +593,8 @@ export default function ProfilePage() {
                       id="profile-lastname"
                       type="text"
                       placeholder="Enter your last name"
-                      className={`input input-bordered w-full bg-slate-900/80 border-slate-600/50 text-white placeholder:text-gray-500 focus:border-cyan-400 focus:outline-none focus:bg-slate-900 ${
-                        lastNameError ? 'border-red-500' : ''
+                      className={`input input-bordered w-full ${
+                        lastNameError ? 'input-error' : ''
                       }`}
                       value={lastName}
                       onChange={(e) => {
@@ -576,8 +625,8 @@ export default function ProfilePage() {
                       id="profile-pincode"
                       type="text"
                       placeholder="12345 or 12345-6789"
-                      className={`input input-bordered w-full bg-slate-900/80 border-slate-600/50 text-white placeholder:text-gray-500 focus:border-cyan-400 focus:outline-none focus:bg-slate-900 ${
-                        pincodeError ? 'border-red-500' : ''
+                      className={`input input-bordered w-full ${
+                        pincodeError ? 'input-error' : ''
                       }`}
                       value={pincode}
                       onChange={(e) => setPincode(e.target.value)}
@@ -611,8 +660,8 @@ export default function ProfilePage() {
                       id="profile-city"
                       type="text"
                       placeholder="Enter your city"
-                      className={`input input-bordered w-full bg-slate-900/80 border-slate-600/50 text-white placeholder:text-gray-500 focus:border-cyan-400 focus:outline-none focus:bg-slate-900 ${
-                        cityError ? 'border-red-500' : ''
+                      className={`input input-bordered w-full ${
+                        cityError ? 'input-error' : ''
                       }`}
                       value={city}
                       onChange={(e) => {
@@ -641,7 +690,7 @@ export default function ProfilePage() {
 
                 <div className="form-control">
                   <label htmlFor="profile-bio" className="label pb-1.5">
-                    <span className="label-text text-white font-medium">
+                    <span className="label-text font-medium">
                       Bio
                     </span>
                   </label>
@@ -676,15 +725,15 @@ export default function ProfilePage() {
 
                 <div className="form-control">
                   <label htmlFor="profile-favoritequote" className="label pb-1.5">
-                    <span className="label-text text-white font-medium">
+                    <span className="label-text font-medium">
                       Favorite Quote
                     </span>
                   </label>
                   <textarea
                     id="profile-favoritequote"
                     placeholder="Share your favorite quote..."
-                    className={`textarea textarea-bordered w-full bg-slate-900/80 border-slate-600/50 text-white placeholder:text-gray-500 focus:border-cyan-400 focus:outline-none focus:bg-slate-900 ${
-                      favoriteQuoteError ? 'border-red-500' : ''
+                    className={`textarea textarea-bordered w-full ${
+                      favoriteQuoteError ? 'textarea-error' : ''
                     }`}
                     value={favoriteQuote}
                     onChange={(e) => {
@@ -709,7 +758,7 @@ export default function ProfilePage() {
                   </label>
                 </div>
 
-                <div className="flex gap-3 pt-4">
+                <div className="flex gap-3 pt-4 border-t border-gray-200">
                   <button
                     type="submit"
                     disabled={saving}
@@ -731,108 +780,140 @@ export default function ProfilePage() {
                   </button>
                 </div>
               </form>
-            ) : (
-              /* View Mode */
-              <div className="space-y-6">
-                {/* Account Information */}
-                <div>
-                  <h2 className="text-xl font-semibold text-base-content mb-4">Account Information</h2>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center py-2 border-b border-base-300">
-                      <span className="text-base-content/60">Email</span>
-                      <span className="text-base-content font-medium">{user.email}</span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b border-base-300">
-                      <span className="text-base-content/60">Account Created</span>
-                      <span className="text-base-content font-medium">
-                        {formatDate(userProfile.createdAt)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b border-base-300">
-                      <span className="text-base-content/60">Last Login</span>
-                      <span className="text-base-content font-medium">
-                        {formatDate(userProfile.lastLogin)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b border-base-300">
-                      <span className="text-base-content/60">Auth Methods</span>
-                      <div className="flex flex-wrap gap-2 justify-end">
-                        {userProfile.authProviders && userProfile.authProviders.length > 0 ? (
-                          userProfile.authProviders.map((provider, index) => (
-                            <span
-                              key={index}
-                              className="badge badge-primary badge-outline"
-                            >
-                              {provider === "google.com" ? "Google" : provider === "password" ? "Email/Password" : provider}
-                            </span>
-                          ))
-                        ) : (
-                          <span className="text-base-content font-medium capitalize">
-                            {userProfile.metadata?.signUpMethod || "N/A"}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Profile Information */}
-                <div>
-                  <h2 className="text-xl font-semibold text-base-content mb-4">Profile Information</h2>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center py-2 border-b border-base-300">
-                      <span className="text-base-content/60">First Name</span>
-                      <span className="text-base-content font-medium">
-                        {userProfile.firstName || "Not set"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b border-base-300">
-                      <span className="text-base-content/60">Last Name</span>
-                      <span className="text-base-content font-medium">
-                        {userProfile.lastName || "Not set"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b border-base-300">
-                      <span className="text-base-content/60">ZIP Code</span>
-                      <span className="text-base-content font-medium">
-                        {userProfile.profile?.pincode || "Not set"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b border-base-300">
-                      <span className="text-base-content/60">City</span>
-                      <span className="text-base-content font-medium">
-                        {userProfile.profile?.city || "Not set"}
-                      </span>
-                    </div>
-                    {userProfile.profile?.bio && (
-                      <div className="py-2 border-b border-base-300">
-                        <span className="text-base-content/60 block mb-2">Bio</span>
-                        <p className="text-base-content">{userProfile.profile.bio}</p>
-                      </div>
-                    )}
-                    {userProfile.profile?.favoriteQuote && (
-                      <div className="py-2 border-b border-base-300">
-                        <span className="text-base-content/60 block mb-2">Favorite Quote</span>
-                        <p className="text-base-content italic">"{userProfile.profile.favoriteQuote}"</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="pt-4">
-                  <Link
-                    href="/dashboard"
-                    className="btn btn-primary w-full font-semibold"
+            </div>
+          ) : (
+            <>
+              {/* View Mode */}
+              {/* Account Information */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 text-primary"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
                   >
-                    Back to Dashboard
-                  </Link>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
+                  </svg>
+                  Account Information
+                </h2>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center py-3 border-b border-gray-200">
+                    <span className="text-gray-600 font-medium">Email</span>
+                    <span className="text-gray-900 font-medium">{user.email}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-3 border-b border-gray-200">
+                    <span className="text-gray-600 font-medium">Account Created</span>
+                    <span className="text-gray-900 font-medium">
+                      {formatDate(userProfile.createdAt)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-3 border-b border-gray-200">
+                    <span className="text-gray-600 font-medium">Last Login</span>
+                    <span className="text-gray-900 font-medium">
+                      {formatDate(userProfile.lastLogin)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-3">
+                    <span className="text-gray-600 font-medium">Auth Methods</span>
+                    <div className="flex flex-wrap gap-2 justify-end">
+                      {userProfile.authProviders && userProfile.authProviders.length > 0 ? (
+                        userProfile.authProviders.map((provider, index) => (
+                          <span
+                            key={index}
+                            className="badge badge-primary badge-outline"
+                          >
+                            {provider === "google.com" ? "Google" : provider === "password" ? "Email/Password" : provider}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-gray-900 font-medium capitalize">
+                          {userProfile.metadata?.signUpMethod || "N/A"}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
-            )}
-          </div>
+
+              {/* Profile Information */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 text-primary"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  Profile Information
+                </h2>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center py-3 border-b border-gray-200">
+                    <span className="text-gray-600 font-medium">First Name</span>
+                    <span className="text-gray-900 font-medium">
+                      {userProfile.firstName || "Not set"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-3 border-b border-gray-200">
+                    <span className="text-gray-600 font-medium">Last Name</span>
+                    <span className="text-gray-900 font-medium">
+                      {userProfile.lastName || "Not set"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-3 border-b border-gray-200">
+                    <span className="text-gray-600 font-medium">ZIP Code</span>
+                    <span className="text-gray-900 font-medium">
+                      {userProfile.profile?.pincode || "Not set"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-3 border-b border-gray-200">
+                    <span className="text-gray-600 font-medium">City</span>
+                    <span className="text-gray-900 font-medium">
+                      {userProfile.profile?.city || "Not set"}
+                    </span>
+                  </div>
+                  {userProfile.profile?.bio && (
+                    <div className="py-3 border-b border-gray-200">
+                      <span className="text-gray-600 font-medium block mb-2">Bio</span>
+                      <p className="text-gray-900">{userProfile.profile.bio}</p>
+                    </div>
+                  )}
+                  {userProfile.profile?.favoriteQuote && (
+                    <div className="py-3">
+                      <span className="text-gray-600 font-medium block mb-2">Favorite Quote</span>
+                      <p className="text-gray-900 italic">"{userProfile.profile.favoriteQuote}"</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="pt-4">
+                <Link
+                  href="/feed"
+                  className="btn btn-primary w-full font-semibold"
+                >
+                  Back to Feed
+                </Link>
+              </div>
+            </>
+          )}
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

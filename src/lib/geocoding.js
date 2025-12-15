@@ -280,3 +280,76 @@ export async function coordsToPincodeAuto(lat, lng) {
   }
 }
 
+/**
+ * Reverse geocode coordinates to get full formatted address
+ * @param {number} lat - Latitude
+ * @param {number} lng - Longitude
+ * @param {string|null} apiKey - Optional Google Maps API key
+ * @returns {Promise<string|null>} Formatted address string or null if not found
+ */
+export async function coordsToAddress(lat, lng, apiKey = null) {
+  try {
+    // Try Google Reverse Geocoding API first if API key is available
+    if (apiKey) {
+      try {
+        const response = await fetch(
+          `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.status === 'OK' && data.results.length > 0) {
+            // Return the formatted address from the first result
+            return data.results[0].formatted_address;
+          }
+        }
+      } catch (googleError) {
+        console.warn('Google Reverse Geocoding failed, trying OpenStreetMap:', googleError);
+      }
+    }
+    
+    // Fallback to OpenStreetMap Nominatim (free, no API key required)
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`,
+      {
+        headers: {
+          'User-Agent': 'LocalLens/1.0', // Required by Nominatim
+        },
+      }
+    );
+    
+    if (!response.ok) {
+      throw new Error('Reverse geocoding API error');
+    }
+    
+    const data = await response.json();
+    
+    if (data && data.display_name) {
+      return data.display_name;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error getting address from coordinates:', error);
+    return null;
+  }
+}
+
+/**
+ * Reverse geocode coordinates to get full formatted address (with automatic API key fetching)
+ * @param {number} lat - Latitude
+ * @param {number} lng - Longitude
+ * @returns {Promise<string|null>} Formatted address string or null if not found
+ */
+export async function coordsToAddressAuto(lat, lng) {
+  try {
+    // Try to get Google Maps API key from Gist
+    const apiKey = await getGoogleMapsApiKey();
+    return await coordsToAddress(lat, lng, apiKey || null);
+  } catch (error) {
+    // If API key fetch fails, use OpenStreetMap
+    return await coordsToAddress(lat, lng, null);
+  }
+}
+

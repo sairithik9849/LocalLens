@@ -36,15 +36,6 @@ function Navigation() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-1">
-            <Link 
-              href="/" 
-              className="px-4 py-2 rounded text-gray-700 transition font-medium"
-              onMouseEnter={(e) => { e.target.style.backgroundColor = '#e48a04'; e.target.style.color = 'white'; }}
-              onMouseLeave={(e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = '#2c3e50'; }}
-            >
-              Home
-            </Link>
-
             {user ? (
               <>
                 <Link 
@@ -94,6 +85,14 @@ function Navigation() {
                   onMouseLeave={(e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = '#2c3e50'; }}
                 >
                   Events
+                </Link>
+                <Link 
+                  href="/yardsales" 
+                  className="px-4 py-2 rounded text-gray-700 transition font-medium"
+                  onMouseEnter={(e) => { e.target.style.backgroundColor = '#e48a04'; e.target.style.color = 'white'; }}
+                  onMouseLeave={(e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = '#2c3e50'; }}
+                >
+                  Yard Sales
                 </Link>
                 <Link 
                   href="/profile" 
@@ -158,16 +157,6 @@ function Navigation() {
       {mobileMenuOpen && (
         <div className="md:hidden bg-white border-t border-gray-200">
           <div className="px-4 py-3 space-y-1">
-            <Link 
-              href="/" 
-              onClick={closeMobileMenu}
-              className="block px-4 py-3 rounded-lg text-gray-700 transition font-medium"
-              onMouseEnter={(e) => { e.target.style.backgroundColor = '#e48a04'; e.target.style.color = 'white'; }}
-              onMouseLeave={(e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = '#2c3e50'; }}
-            >
-              🏠 Home
-            </Link>
-
             {user ? (
               <>
                 <Link 
@@ -223,6 +212,15 @@ function Navigation() {
                   onMouseLeave={(e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = '#2c3e50'; }}
                 >
                   📅 Events
+                </Link>
+                <Link 
+                  href="/yardsales" 
+                  onClick={closeMobileMenu}
+                  className="block px-4 py-3 rounded-lg text-gray-700 transition font-medium"
+                  onMouseEnter={(e) => { e.target.style.backgroundColor = '#e48a04'; e.target.style.color = 'white'; }}
+                  onMouseLeave={(e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = '#2c3e50'; }}
+                >
+                  🏪 Yard Sales
                 </Link>
                 <Link 
                   href="/profile" 

@@ -123,8 +123,8 @@ export default function Home() {
                       </span>
                     </div>
                   )}
-                  <Link href="/dashboard" className="btn btn-ghost btn-sm">
-                    Dashboard
+                  <Link href="/feed" className="btn btn-ghost btn-sm">
+                    Feed
                   </Link>
                   <button onClick={handleLogout} className="btn btn-ghost btn-sm">
                     Logout
@@ -187,8 +187,8 @@ export default function Home() {
               Make informed decisions about where to live, work, and invest.
             </p>
             <div className="flex gap-4 justify-center animate-fade-in-up">
-              <Link href={user ? "/dashboard" : "/login"} className="btn btn-primary btn-lg">
-                {user ? "Go to Dashboard" : "Explore Now"}
+              <Link href={user ? "/feed" : "/login"} className="btn btn-primary btn-lg">
+                {user ? "Go to Feed" : "Explore Now"}
               </Link>
               <Link href="#features" className="btn btn-outline btn-lg" aria-label="Learn more about LocalLens features">
                 Learn More
@@ -467,8 +467,8 @@ export default function Home() {
           <p className="text-xl mb-8 opacity-90">
             Join LocalLens today and start making data-driven decisions about your community.
           </p>
-          <Link href={user ? "/dashboard" : "/signup"} className="btn btn-lg btn-secondary shadow-2xl hover:scale-105 transition-transform font-semibold">
-            {user ? "Go to Dashboard" : "Get Started Free"}
+          <Link href={user ? "/feed" : "/signup"} className="btn btn-lg btn-secondary shadow-2xl hover:scale-105 transition-transform font-semibold">
+            {user ? "Go to Feed" : "Get Started Free"}
           </Link>
         </div>
       </section>

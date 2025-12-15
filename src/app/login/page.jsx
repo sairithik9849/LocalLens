@@ -20,7 +20,7 @@ function LoginForm() {
   useEffect(() => {
     // Redirect authenticated users away from login page
     if (!authLoading && user) {
-      router.replace("/dashboard");
+      router.replace("/feed");
     }
   }, [user, authLoading, router]);
 
@@ -44,8 +44,8 @@ function LoginForm() {
 
     try {
       await login(email, password);
-      // Redirect to dashboard - it will check profile completeness and redirect to setup if needed
-      router.push("/dashboard");
+      // Redirect to feed page after successful login
+      router.push("/feed");
     } catch (err) {
       setError(getAuthErrorMessage(err));
     } finally {
@@ -60,8 +60,8 @@ function LoginForm() {
 
     try {
       await signInWithGoogle();
-      // Redirect to dashboard - it will check profile completeness and redirect to setup if needed
-      router.push("/dashboard");
+      // Redirect to feed page after successful login
+      router.push("/feed");
     } catch (err) {
       setError(getAuthErrorMessage(err));
     } finally {

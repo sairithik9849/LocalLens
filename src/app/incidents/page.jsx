@@ -29,6 +29,10 @@ export default function IncidentsPage() {
   const [viewingIncident, setViewingIncident] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [notification, setNotification] = useState({ type: '', message: '' });
+  const [incidentAddress, setIncidentAddress] = useState(null);
+  const [incidentAddressLoading, setIncidentAddressLoading] = useState(false);
+  const [incidentAddresses, setIncidentAddresses] = useState({}); // Map of incident ID to address
+  const [incidentAddressesLoading, setIncidentAddressesLoading] = useState({}); // Map of incident ID to loading state
   
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -89,28 +93,74 @@ export default function IncidentsPage() {
         try {
           // Publish geocoding job to queue
           const geocodeResponse = await fetch(`/api/geocoding/coords?pincode=${encodeURIComponent(userPincode)}`);
+          
+          if (!geocodeResponse.ok && geocodeResponse.status !== 202) {
+            // Non-202 error, fall back to direct geocoding
+            throw new Error(`Geocoding API returned status ${geocodeResponse.status}`);
+          }
+          
           const geocodeData = await geocodeResponse.json();
 
           if (geocodeResponse.status === 202 && geocodeData.jobId) {
-            // Job queued, poll for result
+            // Job queued, poll for result with improved error handling
             console.log('[Incidents] Geocoding job queued, polling for result...');
             const jobId = geocodeData.jobId;
             let attempts = 0;
             const maxAttempts = 30; // 30 seconds max wait
+            const earlyTimeoutAttempts = 8; // Fall back early if stuck in queued for 8 seconds
             let result = null;
+            let queuedAt = null;
+            let consecutiveQueuedStatus = 0;
 
             while (attempts < maxAttempts && !result) {
-              await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+              // Exponential backoff: start with 500ms, max 2 seconds
+              const delay = Math.min(500 * Math.pow(1.2, attempts), 2000);
+              await new Promise(resolve => setTimeout(resolve, delay));
               
-              const statusResponse = await fetch(`/api/geocoding/status/${jobId}`);
-              const statusData = await statusResponse.json();
+              try {
+                const statusResponse = await fetch(`/api/geocoding/status/${jobId}`);
+                
+                if (!statusResponse.ok) {
+                  // If status check fails, assume RabbitMQ is unavailable
+                  console.warn('[Incidents] Status check failed, falling back to direct geocoding');
+                  throw new Error('Status check failed - RabbitMQ may be unavailable');
+                }
+                
+                const statusData = await statusResponse.json();
 
-              if (statusData.status === 'completed' && statusData.result) {
-                result = statusData.result;
-                coords = { lat: result.lat, lng: result.lng };
-                break;
-              } else if (statusData.status === 'failed') {
-                throw new Error(statusData.error || 'Geocoding failed');
+                if (statusData.status === 'completed' && statusData.result) {
+                  result = statusData.result;
+                  coords = { lat: result.lat, lng: result.lng };
+                  console.log('[Incidents] Geocoding job completed successfully');
+                  break;
+                } else if (statusData.status === 'failed') {
+                  throw new Error(statusData.error || 'Geocoding failed');
+                } else if (statusData.status === 'queued') {
+                  // Track how long job has been queued
+                  if (statusData.queuedAt) {
+                    queuedAt = statusData.queuedAt;
+                    const queuedFor = Math.floor(Date.now() / 1000) - queuedAt;
+                    if (queuedFor > 10) {
+                      // Job has been queued for more than 10 seconds, likely stuck
+                      console.warn(`[Incidents] Job stuck in queued status for ${queuedFor}s, falling back to direct geocoding`);
+                      throw new Error('Job stuck in queue - RabbitMQ worker may be unavailable');
+                    }
+                  }
+                  
+                  consecutiveQueuedStatus++;
+                  // If job has been queued for too many consecutive checks, fall back early
+                  if (consecutiveQueuedStatus >= earlyTimeoutAttempts) {
+                    console.warn(`[Incidents] Job stuck in queued status for ${consecutiveQueuedStatus} checks, falling back to direct geocoding`);
+                    throw new Error('Job stuck in queue - RabbitMQ worker may be unavailable');
+                  }
+                } else if (statusData.status === 'processing') {
+                  // Reset consecutive queued counter if job is processing
+                  consecutiveQueuedStatus = 0;
+                }
+              } catch (statusError) {
+                // If status check fails or job is stuck, fall back to direct geocoding
+                console.warn('[Incidents] Status check error, falling back to direct geocoding:', statusError.message);
+                throw statusError;
               }
 
               attempts++;
@@ -132,16 +182,16 @@ export default function IncidentsPage() {
           }
         } catch (queueError) {
           // Queue unavailable or failed, fallback to direct geocoding
-          console.warn('Queue geocoding failed, using direct geocoding:', queueError.message);
-        try {
-          const apiKey = await getGoogleMapsApiKey();
-          coords = await zipcodeToCoordsGoogle(userPincode, apiKey);
-        } catch (error) {
-          console.warn('Google geocoding failed, trying OpenStreetMap:', error);
+          console.warn('[Incidents] Queue geocoding failed, using direct geocoding:', queueError.message);
+          try {
+            const apiKey = await getGoogleMapsApiKey();
+            coords = await zipcodeToCoordsGoogle(userPincode, apiKey);
+          } catch (error) {
+            console.warn('[Incidents] Google geocoding failed, trying OpenStreetMap:', error);
             try {
-          coords = await zipcodeToCoords(userPincode);
+              coords = await zipcodeToCoords(userPincode);
             } catch (osmError) {
-              console.error('Both geocoding services failed:', osmError);
+              console.error('[Incidents] Both geocoding services failed:', osmError);
               throw new Error('Failed to geocode pincode. Please check your pincode and try again.');
             }
           }
@@ -194,6 +244,9 @@ export default function IncidentsPage() {
           recentIncidents
         });
 
+        // Fetch addresses for all incidents
+        fetchIncidentAddresses(incidentsList);
+
         setLoading(false);
       } catch (err) {
         console.error('Error fetching incidents:', err);
@@ -204,6 +257,87 @@ export default function IncidentsPage() {
 
     fetchUserPincode();
   }, [user, authLoading, router]);
+
+  // Fetch address when viewing incident changes
+  useEffect(() => {
+    if (!viewingIncident || !viewingIncident.location?.lat || !viewingIncident.location?.lng) {
+      setIncidentAddress(null);
+      return;
+    }
+
+    const fetchAddress = async () => {
+      try {
+        setIncidentAddressLoading(true);
+        const response = await fetch(
+          `/api/geocoding/reverse-address?lat=${viewingIncident.location.lat}&lng=${viewingIncident.location.lng}`
+        );
+        const data = await response.json();
+
+        if (response.ok && data.success && data.address) {
+          setIncidentAddress(data.address);
+        } else {
+          // If address lookup fails, keep address as null to show coordinates
+          setIncidentAddress(null);
+        }
+      } catch (error) {
+        console.error('Error fetching address:', error);
+        setIncidentAddress(null);
+      } finally {
+        setIncidentAddressLoading(false);
+      }
+    };
+
+    fetchAddress();
+  }, [viewingIncident]);
+
+  // Fetch addresses for all incidents
+  const fetchIncidentAddresses = async (incidentsList) => {
+    if (!incidentsList || incidentsList.length === 0) return;
+
+    // Fetch addresses for all incidents in parallel
+    const addressPromises = incidentsList.map(async (incident) => {
+      if (!incident.location?.lat || !incident.location?.lng) {
+        return { id: incident._id, address: null };
+      }
+
+      try {
+        setIncidentAddressesLoading(prev => ({ ...prev, [incident._id]: true }));
+        const response = await fetch(
+          `/api/geocoding/reverse-address?lat=${incident.location.lat}&lng=${incident.location.lng}`
+        );
+        const data = await response.json();
+
+        if (response.ok && data.success && data.address) {
+          return { id: incident._id, address: data.address };
+        }
+        return { id: incident._id, address: null };
+      } catch (error) {
+        console.error(`Error fetching address for incident ${incident._id}:`, error);
+        return { id: incident._id, address: null };
+      } finally {
+        setIncidentAddressesLoading(prev => ({ ...prev, [incident._id]: false }));
+      }
+    });
+
+    const results = await Promise.all(addressPromises);
+    const addressMap = {};
+    results.forEach(({ id, address }) => {
+      addressMap[id] = address;
+    });
+    setIncidentAddresses(prev => ({ ...prev, ...addressMap }));
+  };
+
+  // Helper function to get a brief/short address
+  const getBriefAddress = (address) => {
+    if (!address) return null;
+    // Take first 50 characters or first comma-separated part, whichever is shorter
+    const parts = address.split(',');
+    if (parts.length > 0 && parts[0].length <= 50) {
+      return parts[0].trim();
+    }
+    // If first part is too long, truncate to 50 chars
+    return address.length > 50 ? address.substring(0, 47) + '...' : address;
+  };
 
   // Filter and sort incidents
   useEffect(() => {
@@ -885,9 +1019,17 @@ export default function IncidentsPage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                               </svg>
-                              <span className="font-mono text-xs">
-                                {incident.location?.lat?.toFixed(4)}, {incident.location?.lng?.toFixed(4)}
-                              </span>
+                              {incidentAddressesLoading[incident._id] ? (
+                                <span className="text-xs text-base-content/60">Loading...</span>
+                              ) : incidentAddresses[incident._id] ? (
+                                <span className="text-xs text-base-content" title={incidentAddresses[incident._id]}>
+                                  {getBriefAddress(incidentAddresses[incident._id])}
+                                </span>
+                              ) : (
+                                <span className="font-mono text-xs text-base-content/60">
+                                  {incident.location?.lat?.toFixed(4)}, {incident.location?.lng?.toFixed(4)}
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -1148,20 +1290,29 @@ export default function IncidentsPage() {
                       </label>
                     </div>
                     <div className="space-y-2">
-                      <div className="flex flex-wrap gap-4 text-sm">
-                        <div>
-                          <span className="text-base-content/60 font-medium">Lat:</span>
-                          <span className="ml-2 text-base-content font-mono">
-                            {viewingIncident.location?.lat?.toFixed(6)}
-                          </span>
+                      {incidentAddressLoading ? (
+                        <div className="flex items-center gap-2">
+                          <span className="loading loading-spinner loading-sm"></span>
+                          <p className="text-sm text-base-content/60">Loading address...</p>
                         </div>
-                        <div>
-                          <span className="text-base-content/60 font-medium">Lng:</span>
-                          <span className="ml-2 text-base-content font-mono">
-                            {viewingIncident.location?.lng?.toFixed(6)}
-                          </span>
+                      ) : incidentAddress ? (
+                        <p className="text-sm text-base-content">{incidentAddress}</p>
+                      ) : (
+                        <div className="flex flex-wrap gap-4 text-sm">
+                          <div>
+                            <span className="text-base-content/60 font-medium">Lat:</span>
+                            <span className="ml-2 text-base-content font-mono">
+                              {viewingIncident.location?.lat?.toFixed(6)}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-base-content/60 font-medium">Lng:</span>
+                            <span className="ml-2 text-base-content font-mono">
+                              {viewingIncident.location?.lng?.toFixed(6)}
+                            </span>
+                          </div>
                         </div>
-                      </div>
+                      )}
                       <a
                         href={`https://www.google.com/maps?q=${viewingIncident.location?.lat},${viewingIncident.location?.lng}`}
                         target="_blank"

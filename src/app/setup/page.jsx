@@ -69,8 +69,8 @@ export default function SetupPage() {
           
           const { isComplete } = isProfileComplete(data.user);
           if (isComplete) {
-            // Profile is already complete, redirect to dashboard
-            router.replace("/dashboard");
+            // Profile is already complete, redirect to feed
+            router.replace("/feed");
           }
         }
       } catch (err) {
@@ -269,7 +269,7 @@ export default function SetupPage() {
       await new Promise(resolve => setTimeout(resolve, 200));
       
       // Use replace to avoid adding to history and prevent back button issues
-      router.replace('/dashboard');
+      router.replace('/feed');
     } catch (err) {
       setError('An error occurred. Please try again.');
       console.error('Error updating profile:', err);

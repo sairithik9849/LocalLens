@@ -26,7 +26,7 @@ function ResetPasswordForm() {
   useEffect(() => {
     // Redirect if already logged in
     if (user) {
-      router.push("/dashboard");
+      router.push("/feed");
       return;
     }
 

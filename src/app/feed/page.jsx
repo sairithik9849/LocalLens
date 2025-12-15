@@ -356,7 +356,7 @@ export default function FeedPage() {
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-6 p-4 lg:p-6">
           {/* Left Sidebar - Profile (Hidden on mobile/tablet, shown on lg+) */}
-          <div className="hidden lg:block w-80 flex-shrink-0">
+          <div className="hidden lg:block w-80 shrink-0">
             <div className="bg-white rounded-lg shadow p-6 sticky top-24">
               <div className="text-center">
                 <img
@@ -659,7 +659,7 @@ export default function FeedPage() {
                               <img
                                 src={comment.user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.user.name)}&background=f39c12&color=fff`}
                                 alt={comment.user.name}
-                                className="w-10 h-10 rounded-full flex-shrink-0"
+                                className="w-10 h-10 rounded-full shrink-0"
                               />
                               <div className="flex-1">
                                 <div className="bg-gray-100 rounded-lg px-4 py-3">
@@ -689,7 +689,7 @@ export default function FeedPage() {
                                         <img
                                           src={reply.user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(reply.user.name)}&background=f39c12&color=fff`}
                                           alt={reply.user.name}
-                                          className="w-6 h-6 rounded-full flex-shrink-0"
+                                          className="w-6 h-6 rounded-full shrink-0"
                                         />
                                         <div className="flex-1">
                                           <div className="bg-gray-100 rounded-lg px-3 py-2">
@@ -732,7 +732,7 @@ export default function FeedPage() {
           </div>
 
           {/* Right Sidebar - Suggestions & Events (Hidden on mobile, shown on tablet+) */}
-          <div className="hidden md:block w-80 flex-shrink-0">
+          <div className="hidden md:block w-80 shrink-0">
             <div className="space-y-6 sticky top-24">
               {/* Suggested Friends */}
               <div className="bg-white rounded-lg shadow p-4">
@@ -792,7 +792,7 @@ export default function FeedPage() {
                         className="block p-3 rounded-lg hover:bg-gray-50 transition border border-gray-100"
                       >
                         <div className="flex gap-3">
-                          <div className="flex-shrink-0 w-12 h-12 bg-green-100 rounded-lg flex flex-col items-center justify-center">
+                          <div className="shrink-0 w-12 h-12 bg-green-100 rounded-lg flex flex-col items-center justify-center">
                             <span className="text-xs text-green-700 font-bold">
                               {new Date(event.eventDate).toLocaleDateString('en-US', { month: 'short' }).toUpperCase()}
                             </span>
