@@ -34,9 +34,10 @@ export async function GET(request) {
       lat: lat ? parseFloat(lat) : null, 
       lng: lng ? parseFloat(lng) : null 
     };
+    let placeName = null; // Store place name (city) for display
     
     if (zipcode && (!coordinates.lat || !coordinates.lng)) {
-      // Geocode zipcode to get coordinates
+      // Geocode zipcode to get coordinates and place name
       const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${zipcode}&key=${apiKey}`;
       const geocodeResponse = await fetch(geocodeUrl);
       const geocodeData = await geocodeResponse.json();
@@ -48,16 +49,71 @@ export async function GET(request) {
         );
       }
       
-      const location = geocodeData.results[0].geometry.location;
+      const result = geocodeData.results[0];
+      const location = result.geometry.location;
       coordinates = {
         lat: parseFloat(location.lat),
         lng: parseFloat(location.lng)
       };
+      
+      // Extract place name (city) from address components
+      const addressComponents = result.address_components || [];
+      // Look for locality (city) first, then administrative_area_level_2 (county/city)
+      for (const component of addressComponents) {
+        if (component.types.includes('locality')) {
+          placeName = component.long_name;
+          break;
+        }
+        if (component.types.includes('administrative_area_level_2') && !placeName) {
+          placeName = component.long_name;
+        }
+      }
+      
+      // Fallback: extract from formatted_address if no city found
+      if (!placeName && result.formatted_address) {
+        const addressParts = result.formatted_address.split(',');
+        if (addressParts.length >= 1) {
+          placeName = addressParts[0].trim();
+        }
+      }
     } else if (!coordinates.lat || !coordinates.lng) {
       return NextResponse.json(
         { error: 'Either zipcode or lat/lng must be provided' },
         { status: 400 }
       );
+    } else if (lat && lng && !placeName) {
+      // If coordinates provided but no zipcode, try reverse geocoding to get place name
+      try {
+        const reverseGeocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coordinates.lat},${coordinates.lng}&key=${apiKey}`;
+        const reverseGeocodeResponse = await fetch(reverseGeocodeUrl);
+        const reverseGeocodeData = await reverseGeocodeResponse.json();
+        
+        if (reverseGeocodeData.status === 'OK' && reverseGeocodeData.results[0]) {
+          const result = reverseGeocodeData.results[0];
+          const addressComponents = result.address_components || [];
+          // Look for locality (city) first
+          for (const component of addressComponents) {
+            if (component.types.includes('locality')) {
+              placeName = component.long_name;
+              break;
+            }
+            if (component.types.includes('administrative_area_level_2') && !placeName) {
+              placeName = component.long_name;
+            }
+          }
+          
+          // Fallback: extract from formatted_address
+          if (!placeName && result.formatted_address) {
+            const addressParts = result.formatted_address.split(',');
+            if (addressParts.length >= 1) {
+              placeName = addressParts[0].trim();
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('Reverse geocoding failed for place name:', error);
+        // Continue without place name
+      }
     }
 
     // Fetch weather data from Google Weather API
@@ -151,7 +207,7 @@ export async function GET(request) {
         windSpeed: windSpeedMph,
         visibility: visibility,
         pressure: pressure,
-        location: zipcode || `${coordinates.lat},${coordinates.lng}`,
+        location: placeName || zipcode || `${coordinates.lat},${coordinates.lng}`,
       },
       hourly: [], // Google Weather API current conditions - hourly forecast would need separate call
     };
