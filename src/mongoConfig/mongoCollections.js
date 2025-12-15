@@ -20,3 +20,4 @@ export const blog = getCollectionFn('blog');
 export const events = getCollectionFn('events');
 export const users = getCollectionFn('users');
 export const incidents = getCollectionFn('incidents');
+export const admin = getCollectionFn('admin');
