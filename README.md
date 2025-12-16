@@ -60,7 +60,9 @@ LocalLens is a full-stack web application built with Next.js that combines geosp
 
 ### Installation
 
-Must have **Redis** and **RabbmitMQ** installed locally.
+Must have **Redis** and **RabbitMQ** installed locally.
+
+**Note**: For detailed RabbitMQ setup instructions, see [RABBITMQ_README.md](./RABBITMQ_README.md).
 
 1. **Clone the repository**
    ```bash
