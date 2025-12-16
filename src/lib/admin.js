@@ -114,29 +114,6 @@ export const getPageOfReports = async (page = 1, pageSize = 10, uid) => {
 };
 
 
-
-export const getPageOfUsers = async (page = 1, pageSize = 10, uid) => {
-  if (!isUserAdmin(uid)) {
-    throw new Error('Unauthorized');
-  }
-
-  const userCollection = await users();
-
-  const skips = pageSize * (page - 1);
-
-  const userList = await userCollection
-    .find({})
-    .skip(skips)
-    .limit(pageSize)
-    .toArray();
-
-
-  return userList;
-};
-
-
-
-
 export const approveReport = async (reportId) => {
     if (!reportId) throw 'You must provide a report ID';
 
@@ -180,3 +157,50 @@ export const ignoreReport = async (reportId, uid) => {
 
     return { deleted: true };
 };
+
+
+export const getPageOfUsersByAdmin = async (page = 1, pageSize = 10, uid) => {
+  if (!isUserAdmin(uid)) {
+    throw new Error('Unauthorized');
+  }
+
+  const userCollection = await users();
+
+  const skips = pageSize * (page - 1);
+
+  const userList = await userCollection
+    .find({})
+    .skip(skips)
+    .limit(pageSize)
+    .toArray();
+    return userList;
+};
+
+
+export const toggleBanUser = async (targetUid, reason, uid) => {
+    if (!targetUid) throw 'You must provide a target UID';
+    if (!uid) throw 'You must provide a UID';
+
+    const isAdmin = await isUserAdmin(uid);
+    if (!isAdmin) throw 'User is not authorized to ban users';
+
+    const userCollection = await users();
+
+    const targetUser = await userCollection.findOne({ _id: new ObjectId(targetUid) });
+    if (!targetUser) throw 'No user found with the provided target UID';
+    
+    const newBanStatus = !targetUser.moderation.banned;
+    const updateInfo = await userCollection.updateOne(
+        { _id: new ObjectId(targetUid) },
+        { 
+            $set: { 
+                "moderation.banned": newBanStatus, 
+                "moderation.banReason": reason || null 
+            } 
+        }
+    );
+    
+    if (updateInfo.modifiedCount === 0) throw 'Could not update ban status';
+
+    return { banned: newBanStatus };
+}

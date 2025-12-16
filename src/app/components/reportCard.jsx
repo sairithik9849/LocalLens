@@ -142,7 +142,6 @@ export default function ReportCard({ report, onHandled }) {
           </div>
         </div>
       </article>
-
       <ViewPostModal
         isOpen={showPostModal}
         handleClose={handleCloseModals}
