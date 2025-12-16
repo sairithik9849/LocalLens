@@ -4,10 +4,12 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/firebase/AuthContext';
+import { useCheckBanned } from '@/hooks/useCheckBanned';
 import Navigation from '@/app/components/Navigation';
 
 export default function FriendsSearchPage() {
   const { user } = useAuth();
+  const { checkingBanned } = useCheckBanned();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [friendRequests, setFriendRequests] = useState([]);
@@ -17,10 +19,14 @@ export default function FriendsSearchPage() {
 
   // Fetch friend requests on mount
   useEffect(() => {
+    if (checkingBanned) {
+      return;
+    }
+
     if (user) {
       fetchFriendRequests();
     }
-  }, [user]);
+  }, [user, checkingBanned]);
 
   const showNotification = (type, message) => {
     setNotification({ type, message });

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/firebase/AuthContext";
+import { useCheckBanned } from "@/hooks/useCheckBanned";
 import { validatePincode } from "@/lib/pincodeValidation.js";
 import { validateNameField, validateCity } from "@/lib/userProfileCheck.js";
 import { sanitizeBio, sanitizeQuote } from "@/lib/sanitizeInput.js";
@@ -37,12 +38,13 @@ export default function ProfilePage() {
   const [userProfile, setUserProfile] = useState(null);
   
   const { user, refreshUserProfile, loading: authLoading } = useAuth();
+  const { checkingBanned } = useCheckBanned();
   const router = useRouter();
 
   // Fetch user profile on mount
   useEffect(() => {
     // Wait for auth to finish loading before checking user
-    if (authLoading) {
+    if (authLoading || checkingBanned) {
       return;
     }
 
@@ -53,7 +55,7 @@ export default function ProfilePage() {
     }
 
     fetchUserProfile();
-  }, [user, authLoading, router]);
+  }, [user, authLoading, checkingBanned, router]);
 
   const fetchUserProfile = async () => {
     if (!user?.uid) return;

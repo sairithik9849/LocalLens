@@ -3,11 +3,16 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/firebase/AuthContext';
+import { useRequireNonAdmin } from '@/hooks/useRequireNonAdmin';
+import { useCheckBanned } from '@/hooks/useCheckBanned';
 import Navigation from '@/app/components/Navigation';
 import Link from 'next/link';
+import ReportPostModal from '@/app/components/ReportPostModal';
 
 export default function FeedPage() {
   const { user } = useAuth();
+  const { checkingAdmin } = useRequireNonAdmin();
+  const { checkingBanned } = useCheckBanned();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newPostContent, setNewPostContent] = useState('');
@@ -23,15 +28,32 @@ export default function FeedPage() {
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [expandedImage, setExpandedImage] = useState(null);
   const fileInputRef = useRef(null);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [postToReport, setPostToReport] = useState(null);
+
+
+  const handleOpenReportPostModal = (post) => {
+    setShowReportModal(true);
+    setPostToReport(post);
+
+  };
+  const handleCloseModals = () => setShowReportModal(false);
+
 
   useEffect(() => {
+    // Don't fetch data if checking admin status, ban status, or if user is admin/banned (will be redirected)
+    if (checkingAdmin || checkingBanned) {
+      setLoading(true);
+      return;
+    }
+    
     if (user) {
       fetchPosts();
       fetchUserProfile();
       fetchSuggestedFriends();
       fetchUpcomingEvents();
     }
-  }, [user]);
+  }, [user, checkingAdmin, checkingBanned]);
 
   const fetchUserProfile = async () => {
     try {
@@ -365,11 +387,11 @@ export default function FeedPage() {
                   alt="Profile"
                   className="w-32 h-32 rounded-full mx-auto mb-4 border-4 border-green-100"
                 />
-                <h2 className="text-2xl font-bold text-gray-900">
+                <h1 className="text-2xl font-bold text-gray-900">
                   {userProfile?.firstName && userProfile?.lastName 
                     ? `${userProfile.firstName} ${userProfile.lastName}`
                     : user.displayName || 'User'}
-                </h2>
+                </h1>
                 <p className="text-base text-gray-600 mt-2">{userProfile?.email || user.email}</p>
                 
                 {userProfile?.profile?.city && (
@@ -559,7 +581,7 @@ export default function FeedPage() {
                         className="w-12 h-12 rounded-full"
                       />
                       <div>
-                        <h3 className="font-semibold text-base">{post.user.name}</h3>
+                        <h2 className="font-semibold text-base">{post.user.name}</h2>
                         <p className="text-sm text-gray-500">{formatTime(post.createdAt)}</p>
                       </div>
                     </div>
@@ -632,6 +654,18 @@ export default function FeedPage() {
                       </svg>
                       <span className="text-base font-medium">{post.sharesCount}</span>
                     </button>
+
+                    <button
+                      onClick={() => handleOpenReportPostModal(post)}
+                      className="flex items-center gap-2 text-gray-600 hover:text-secondary transition"
+                      title="Report post"
+                      aria-label="Report post"
+                    >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 3v1.5M3 21v-6m0 0 2.77-.693a9 9 0 0 1 6.208.682l.108.054a9 9 0 0 0 6.086.71l3.114-.732a48.524 48.524 0 0 1-.005-10.499l-3.11.732a9 9 0 0 1-6.085-.711l-.108-.054a9 9 0 0 0-6.208-.682L3 4.5M3 15V4.5" />
+                    </svg>
+                    </button>
+
                   </div>
 
                   {showComments[post._id] && (
@@ -847,6 +881,12 @@ export default function FeedPage() {
           />
         </div>
       )}
+      <ReportPostModal 
+        isOpen={showReportModal} 
+        handleClose={handleCloseModals} 
+        post={postToReport} 
+      />
+
     </>
   );
 }

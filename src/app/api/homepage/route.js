@@ -1,9 +1,10 @@
 import * as homepageData from '@/lib/homepage.js';
 import { parse } from 'querystring';
-import admin from "@/firebase/firebaseAuth";
+import admin, { initializeAdmin } from "@/firebase/firebaseAuth";
 
 
 export async function POST(req) {
+   await initializeAdmin();
    const body = await req.text(); 
    const userData = parse(body); 
    console.log(userData);
@@ -34,6 +35,7 @@ export async function POST(req) {
 }
 
 export async function GET(req) {
+   await initializeAdmin();
    const { searchParams } = new URL(req.url);
    const page = searchParams.get('page');
    const location = searchParams.get('location');

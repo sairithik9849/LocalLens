@@ -56,7 +56,10 @@ export async function GET(request) {
     // Check if user is banned (early check)
     if (user.moderation?.banned === true) {
       return Response.json(
-        { error: 'Account is banned' },
+        { 
+          error: 'Account is banned',
+          banReason: user.moderation?.banReason || null
+        },
         { status: 403 }
       );
     }

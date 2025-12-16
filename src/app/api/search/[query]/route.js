@@ -1,10 +1,11 @@
 import * as homepageData from '@/lib/homepage.js';
-import admin from "@/firebase/firebaseAuth";
+import admin, { initializeAdmin } from "@/firebase/firebaseAuth";
 import { NextResponse } from "next/server";
 
 
 export async function GET(req, { params }) {
    try {
+    await initializeAdmin();
     const { query } = await params || {};
     const authHeader = req.headers.get("authorization");
       

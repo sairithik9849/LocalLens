@@ -4,10 +4,12 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/firebase/AuthContext';
+import { useCheckBanned } from '@/hooks/useCheckBanned';
 import Navigation from '@/app/components/Navigation';
 
 export default function ChatPage() {
   const { user } = useAuth();
+  const { checkingBanned } = useCheckBanned();
   const [friends, setFriends] = useState([]);
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -20,6 +22,10 @@ export default function ChatPage() {
 
   // Fetch friends list on mount
   useEffect(() => {
+    if (checkingBanned) {
+      return;
+    }
+
     if (user) {
       fetchFriends();
       
@@ -34,7 +40,7 @@ export default function ChatPage() {
         clearInterval(friendsPollingRef.current);
       }
     };
-  }, [user]);
+  }, [user, checkingBanned]);
 
   // Poll for messages when friend is selected
   useEffect(() => {

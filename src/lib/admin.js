@@ -1,4 +1,4 @@
-import { admin, blog, users } from '@/mongoConfig/mongoCollections.js';
+import { admin, posts, users } from '@/mongoConfig/mongoCollections.js';
 import { ObjectId } from 'mongodb';
 
 const getInfoByUid = async (uid) => {
@@ -7,7 +7,7 @@ const getInfoByUid = async (uid) => {
   const adminCollection = await users();
   const adminData = await adminCollection.findOne({ _id: uid });
 
-  if (!adminData) throw 'No user found with the provided UID';
+  if (!adminData) throw 'No admin user found with the provided UID';
 
   return adminData;
 }
@@ -26,14 +26,24 @@ const getInfoByid = async (uid) => {
 export const isUserAdmin = async (uid) => {
     if (!uid) throw 'You must provide a UID';
 
-    const adminCollection = await users();
-    const userData = await adminCollection.findOne({ firebaseUid: uid });
+    try {
+        const adminCollection = await users();
+        const userData = await adminCollection.findOne({ firebaseUid: uid });
 
-    if (!userData) throw 'No user found with the provided UID';
+        // If user doesn't exist or doesn't have admin role, return false
+        if (!userData) {
+            return false;
+        }
 
-    if (userData.role && userData.role === 'admin') {
-        return true;
-    } else {
+        if (userData.role && userData.role === 'admin') {
+            return true;
+        } else {
+            return false;
+        }
+    } catch (error) {
+        // Log the error but return false for any database errors
+        // This prevents 500 errors for non-admin users
+        console.error('Error checking admin status:', error);
         return false;
     }
 }
@@ -44,7 +54,7 @@ export const reportBlog = async (blogId, reason, reportedByUid) => {
     if (!reason) throw 'You must provide a reason for reporting';
     if (!reportedByUid) throw 'You must provide the UID of the reporter';
 
-    const blogCollection = await blog();
+    const blogCollection = await posts();
     const usersCollection = await users();
 
     const blogData = await blogCollection.findOne({ _id: new ObjectId(blogId) });
@@ -62,6 +72,8 @@ export const reportBlog = async (blogId, reason, reportedByUid) => {
     };
 
     const adminCollection = await admin();
+    const duplicateCheck = await adminCollection.findOne({ blogId: blogId, reportedBy: new ObjectId(reporterData._id) });
+    if (duplicateCheck) throw 'You have already reported this blog';
     const updateInfo = await adminCollection.insertOne(reportEntry);
     if (updateInfo.insertedCount === 0) throw 'Could not report the blog';
 
@@ -75,7 +87,7 @@ export const getPageOfReports = async (page = 1, pageSize = 10, uid) => {
     throw new Error('Unauthorized');
   }
 
-  const blogCollection = await blog();
+  const blogCollection = await posts();
   const adminCollection = await admin();
 
   const skips = pageSize * (page - 1);
@@ -100,12 +112,12 @@ export const getPageOfReports = async (page = 1, pageSize = 10, uid) => {
 
     const blogExists = await blogCollection.findOne({ _id: blogId });
     if (blogExists) {
-        const reporteeEmail = await getInfoByid(blogExists.postedBy)
+        const reporteeEmail = await getInfoByUid(blogExists.user)
         report.reporteeEmail = reporteeEmail.email
-        report.title = blogExists.title
-        report.body = blogExists.body
-        report.postedBy = blogExists.postedBy
-        report.postedOn = blogExists.postedOn
+        report.body = blogExists.content
+        report.images = blogExists.images || []
+        report.postedBy = blogExists.user
+        report.postedOn = blogExists.createdAt
         report.location = blogExists.location
         filtered.push(report);
     }
@@ -113,29 +125,6 @@ export const getPageOfReports = async (page = 1, pageSize = 10, uid) => {
 
   return filtered.slice(skips, skips + pageSize);
 };
-
-
-
-export const getPageOfUsers = async (page = 1, pageSize = 10, uid) => {
-  if (!isUserAdmin(uid)) {
-    throw new Error('Unauthorized');
-  }
-
-  const userCollection = await users();
-
-  const skips = pageSize * (page - 1);
-
-  const userList = await userCollection
-    .find({})
-    .skip(skips)
-    .limit(pageSize)
-    .toArray();
-
-
-  return userList;
-};
-
-
 
 
 export const approveReport = async (reportId) => {
@@ -156,7 +145,7 @@ export const deletePostByReport = async (blogId, uid) => {
     const isAdmin = await isUserAdmin(uid);
     if (!isAdmin) throw 'User is not authorized to delete posts';
 
-    const blogCollection = await blog();
+    const blogCollection = await posts();
     const adminCollection = await admin();
 
     const deleteInfo = await blogCollection.deleteOne({ _id: new ObjectId(blogId) });
@@ -183,16 +172,48 @@ export const ignoreReport = async (reportId, uid) => {
 };
 
 
-export const banUser = async (userId, uid) => {
-    if (!reportId) throw new Error('You must provide a reportId');
-    if (!uid) throw new Error('You must provide a UID');
+export const getPageOfUsersByAdmin = async (page = 1, pageSize = 10, uid) => {
+  if (!isUserAdmin(uid)) {
+    throw new Error('Unauthorized');
+  }
+
+  const userCollection = await users();
+
+  const skips = pageSize * (page - 1);
+
+  const userList = await userCollection
+    .find({})
+    .skip(skips)
+    .limit(pageSize)
+    .toArray();
+    return userList;
+};
+
+
+export const toggleBanUser = async (targetUid, reason, uid) => {
+    if (!targetUid) throw 'You must provide a target UID';
+    if (!uid) throw 'You must provide a UID';
 
     const isAdmin = await isUserAdmin(uid);
-    if (!isAdmin) throw new Error('User is not authorized to delete posts');
+    if (!isAdmin) throw 'User is not authorized to ban users';
 
-    const usersCollection = await users();
+    const userCollection = await users();
 
-    const updated = await usersCollection.findOneAndUpdate({_id: userId}, {})
+    const targetUser = await userCollection.findOne({ _id: new ObjectId(targetUid) });
+    if (!targetUser) throw 'No user found with the provided target UID';
+    
+    const newBanStatus = !targetUser.moderation.banned;
+    const updateInfo = await userCollection.updateOne(
+        { _id: new ObjectId(targetUid) },
+        { 
+            $set: { 
+                "moderation.banned": newBanStatus, 
+                "moderation.banReason": reason || null 
+            } 
+        }
+    );
+    
+    if (updateInfo.modifiedCount === 0) throw 'Could not update ban status';
 
-
+    return { banned: newBanStatus };
 }

@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/firebase/AuthContext';
+import { useRequireNonAdmin } from '@/hooks/useRequireNonAdmin';
+import { useCheckBanned } from '@/hooks/useCheckBanned';
 import Navigation from '@/app/components/Navigation';
 import EditIncidentModal from '@/app/components/EditIncidentModal';
 import { zipcodeToCoordsGoogle, zipcodeToCoords } from '@/lib/geocoding';
@@ -11,6 +13,8 @@ import Link from 'next/link';
 
 export default function IncidentsPage() {
   const { user, loading: authLoading } = useAuth();
+  const { checkingAdmin } = useRequireNonAdmin();
+  const { checkingBanned } = useCheckBanned();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -42,7 +46,7 @@ export default function IncidentsPage() {
 
   useEffect(() => {
     // Wait for auth to finish loading before checking user
-    if (authLoading) {
+    if (authLoading || checkingAdmin || checkingBanned) {
       return;
     }
 
@@ -256,7 +260,7 @@ export default function IncidentsPage() {
     };
 
     fetchUserPincode();
-  }, [user, authLoading, router]);
+  }, [user, authLoading, checkingAdmin, checkingBanned, router]);
 
   // Fetch address when viewing incident changes
   useEffect(() => {
@@ -780,7 +784,7 @@ export default function IncidentsPage() {
             <div className="card bg-linear-to-br from-primary/10 to-primary/5 border border-primary/20 shadow-lg hover:shadow-xl transition-all hover:scale-105">
               <div className="card-body">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-semibold text-base-content/70 uppercase tracking-wider">Total Incidents</h3>
+                  <h2 className="text-sm font-semibold text-base-content/70 uppercase tracking-wider">Total Incidents</h2>
                   <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -794,7 +798,7 @@ export default function IncidentsPage() {
             <div className="card bg-linear-to-br from-secondary/10 to-secondary/5 border border-secondary/20 shadow-lg hover:shadow-xl transition-all hover:scale-105">
               <div className="card-body">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-semibold text-base-content/70 uppercase tracking-wider">Incident Types</h3>
+                  <h2 className="text-sm font-semibold text-base-content/70 uppercase tracking-wider">Incident Types</h2>
                   <div className="w-12 h-12 rounded-full bg-secondary/20 flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
@@ -808,7 +812,7 @@ export default function IncidentsPage() {
             <div className="card bg-linear-to-br from-accent/10 to-accent/5 border border-accent/20 shadow-lg hover:shadow-xl transition-all hover:scale-105">
               <div className="card-body">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-semibold text-base-content/70 uppercase tracking-wider">Recent Reports</h3>
+                  <h2 className="text-sm font-semibold text-base-content/70 uppercase tracking-wider">Recent Reports</h2>
                   <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -893,7 +897,7 @@ export default function IncidentsPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-bold mb-2 text-base-content">No incidents match your filters</h3>
+                <h2 className="text-2xl font-bold mb-2 text-base-content">No incidents match your filters</h2>
                 <p className="text-base-content/70 mb-6">Try adjusting your search or filter criteria.</p>
                 <button
                   onClick={() => {

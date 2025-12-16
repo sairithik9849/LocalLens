@@ -1,10 +1,13 @@
 import * as adminData from '@/lib/admin.js';
-import admin from "@/firebase/firebaseAuth";
+import admin, { initializeAdmin } from "@/firebase/firebaseAuth";
 import { NextResponse } from "next/server";
 
 
 export async function POST(req, { params }) {
   try {
+    // Ensure Firebase Admin is initialized before use
+    await initializeAdmin();
+    
     const { id } = await params || {};
       const text = await req.text();
       let userData = Object.fromEntries(new URLSearchParams(text));

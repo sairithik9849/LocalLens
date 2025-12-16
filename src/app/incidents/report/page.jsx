@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/firebase/AuthContext';
+import { useCheckBanned } from '@/hooks/useCheckBanned';
 import Navigation from '@/app/components/Navigation';
 import { GoogleMap, LoadScript } from '@react-google-maps/api';
 import AdvancedMarker from '@/app/components/AdvancedMarker';
@@ -14,7 +15,8 @@ import Link from 'next/link';
 const libraries = ['places', 'marker'];
 
 export default function ReportPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { checkingBanned } = useCheckBanned();
   const router = useRouter();
   const { apiKey, isGoogleMapsLoaded, isLoadingKey } = useGoogleMapsLoader(libraries);
   const mapRef = useRef(null);

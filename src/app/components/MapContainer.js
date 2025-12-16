@@ -436,7 +436,7 @@ const IncidentDetailModal = ({ incident, onClose, getRelativeTime, getIncidentTy
     >
       <div className="card bg-base-100 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-base-300 animate-fade-in-up">
         {/* Header */}
-        <div className="card-body pb-4 border-b border-base-300 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10">
+        <div className="card-body pb-4 border-b border-base-300 bg-linear-to-r from-primary/10 via-secondary/10 to-primary/10">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
               <div className={`w-16 h-16 rounded-xl ${getIncidentTypeColor(incident.incidentType).replace('badge-', 'bg-')}/20 flex items-center justify-center text-4xl shadow-lg`}>
@@ -636,7 +636,7 @@ const EventDetailModal = ({ event, onClose }) => {
     >
       <div className="card bg-base-100 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-base-300 animate-fade-in-up">
         {/* Header */}
-        <div className="card-body pb-4 border-b border-base-300 bg-gradient-to-r from-secondary/10 via-primary/10 to-secondary/10">
+        <div className="card-body pb-4 border-b border-base-300 bg-linear-to-r from-secondary/10 via-primary/10 to-secondary/10">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 rounded-xl bg-secondary/20 flex items-center justify-center text-4xl shadow-lg">

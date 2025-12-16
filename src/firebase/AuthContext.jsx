@@ -100,10 +100,23 @@ async function syncUserToMongoDB(firebaseUser, signupMethod, skipIfRecent = fals
       }, 5000);
     } else {
       const error = await response.json();
+      
+      // Don't log errors for banned users - this is expected behavior
+      // They will be redirected to /banned page by useCheckBanned hook
+      if (response.status === 403 && error.error === 'Account is banned') {
+        // Silently skip sync for banned users
+        return;
+      }
+      
+      // Log other sync errors
       console.error('Failed to sync user to MongoDB:', error);
     }
   } catch (error) {
     // Don't block auth flow if sync fails
+    // Don't log errors for banned users - they're handled by redirect to /banned
+    if (error?.message?.includes('banned') || error?.error === 'Account is banned') {
+      return;
+    }
     console.error('Error syncing user to MongoDB:', error);
   } finally {
     syncInProgress.delete(syncKey);
