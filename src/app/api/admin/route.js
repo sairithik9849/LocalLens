@@ -42,6 +42,7 @@ export async function POST(req) {
     
         const decoded = await admin.auth().verifyIdToken(idToken);
         const uid = decoded.uid; 
+        
 
 
     if (!userData?.reportId) {
