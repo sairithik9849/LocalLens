@@ -62,6 +62,8 @@ export const reportBlog = async (blogId, reason, reportedByUid) => {
     };
 
     const adminCollection = await admin();
+    const duplicateCheck = await adminCollection.findOne({ blogId: blogId, reportedBy: new ObjectId(reporterData._id) });
+    if (duplicateCheck) throw 'You have already reported this blog';
     const updateInfo = await adminCollection.insertOne(reportEntry);
     if (updateInfo.insertedCount === 0) throw 'Could not report the blog';
 

@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/firebase/AuthContext';
 import Navigation from '@/app/components/Navigation';
 import Link from 'next/link';
+import ReportPostModal from '@/app/components/ReportPostModal';
 
 export default function FeedPage() {
   const { user } = useAuth();
@@ -23,6 +24,17 @@ export default function FeedPage() {
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [expandedImage, setExpandedImage] = useState(null);
   const fileInputRef = useRef(null);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [postToReport, setPostToReport] = useState(null);
+
+
+  const handleOpenReportPostModal = (post) => {
+    setShowReportModal(true);
+    setPostToReport(post);
+
+  };
+  const handleCloseModals = () => setShowReportModal(false);
+
 
   useEffect(() => {
     if (user) {
@@ -632,6 +644,18 @@ export default function FeedPage() {
                       </svg>
                       <span className="text-base font-medium">{post.sharesCount}</span>
                     </button>
+
+                    <button
+                      onClick={() => handleOpenReportPostModal(post)}
+                      className="flex items-center gap-2 text-gray-600 hover:text-secondary transition"
+                      title="Report post"
+                      aria-label="Report post"
+                    >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 3v1.5M3 21v-6m0 0 2.77-.693a9 9 0 0 1 6.208.682l.108.054a9 9 0 0 0 6.086.71l3.114-.732a48.524 48.524 0 0 1-.005-10.499l-3.11.732a9 9 0 0 1-6.085-.711l-.108-.054a9 9 0 0 0-6.208-.682L3 4.5M3 15V4.5" />
+                    </svg>
+                    </button>
+
                   </div>
 
                   {showComments[post._id] && (
@@ -847,6 +871,12 @@ export default function FeedPage() {
           />
         </div>
       )}
+      <ReportPostModal 
+        isOpen={showReportModal} 
+        handleClose={handleCloseModals} 
+        post={postToReport} 
+      />
+
     </>
   );
 }
