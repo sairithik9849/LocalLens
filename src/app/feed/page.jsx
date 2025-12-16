@@ -365,11 +365,11 @@ export default function FeedPage() {
                   alt="Profile"
                   className="w-32 h-32 rounded-full mx-auto mb-4 border-4 border-green-100"
                 />
-                <h2 className="text-2xl font-bold text-gray-900">
+                <h1 className="text-2xl font-bold text-gray-900">
                   {userProfile?.firstName && userProfile?.lastName 
                     ? `${userProfile.firstName} ${userProfile.lastName}`
                     : user.displayName || 'User'}
-                </h2>
+                </h1>
                 <p className="text-base text-gray-600 mt-2">{userProfile?.email || user.email}</p>
                 
                 {userProfile?.profile?.city && (
@@ -559,7 +559,7 @@ export default function FeedPage() {
                         className="w-12 h-12 rounded-full"
                       />
                       <div>
-                        <h3 className="font-semibold text-base">{post.user.name}</h3>
+                        <h2 className="font-semibold text-base">{post.user.name}</h2>
                         <p className="text-sm text-gray-500">{formatTime(post.createdAt)}</p>
                       </div>
                     </div>
