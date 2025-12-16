@@ -13,6 +13,7 @@ export default function FriendsSearchPage() {
   const [friendRequests, setFriendRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('search');
+  const [notification, setNotification] = useState({ type: '', message: '' });
 
   // Fetch friend requests on mount
   useEffect(() => {
@@ -20,6 +21,11 @@ export default function FriendsSearchPage() {
       fetchFriendRequests();
     }
   }, [user]);
+
+  const showNotification = (type, message) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification({ type: '', message: '' }), 5000);
+  };
 
   const fetchFriendRequests = async () => {
     try {
@@ -76,14 +82,14 @@ export default function FriendsSearchPage() {
         setSearchResults(searchResults.map(u => 
           u._id === recipientId ? { ...u, requestSent: true } : u
         ));
-        alert('Friend request sent!');
+        showNotification('success', 'Friend request sent!');
       } else {
         const error = await response.json();
-        alert(error.error || 'Failed to send friend request');
+        showNotification('error', error.error || 'Failed to send friend request');
       }
     } catch (error) {
       console.error('Error sending friend request:', error);
-      alert('Failed to send friend request');
+      showNotification('error', 'Failed to send friend request');
     }
   };
 
@@ -100,13 +106,13 @@ export default function FriendsSearchPage() {
 
       if (response.ok) {
         setFriendRequests(friendRequests.filter(req => req._id !== requestId));
-        alert('Friend request accepted!');
+        showNotification('success', 'Friend request accepted!');
       } else {
-        alert('Failed to accept friend request');
+        showNotification('error', 'Failed to accept friend request');
       }
     } catch (error) {
       console.error('Error accepting friend request:', error);
-      alert('Failed to accept friend request');
+      showNotification('error', 'Failed to accept friend request');
     }
   };
 
@@ -123,12 +129,13 @@ export default function FriendsSearchPage() {
 
       if (response.ok) {
         setFriendRequests(friendRequests.filter(req => req._id !== requestId));
+        showNotification('success', 'Friend request declined');
       } else {
-        alert('Failed to decline friend request');
+        showNotification('error', 'Failed to decline friend request');
       }
     } catch (error) {
       console.error('Error declining friend request:', error);
-      alert('Failed to decline friend request');
+      showNotification('error', 'Failed to decline friend request');
     }
   };
 
@@ -147,6 +154,34 @@ export default function FriendsSearchPage() {
     <>
       <Navigation />
       <div className="min-h-screen bg-gray-50">
+        {/* Notification Toast */}
+        {notification.message && (
+          <div className="fixed top-20 right-6 z-50 animate-fade-in">
+            <div className={`flex items-center gap-3 px-6 py-4 rounded-lg shadow-lg ${
+              notification.type === 'success' 
+                ? 'bg-green-500 text-white' 
+                : 'bg-red-500 text-white'
+            }`}>
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                {notification.type === 'success' ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                )}
+              </svg>
+              <span className="font-medium">{notification.message}</span>
+              <button
+                onClick={() => setNotification({ type: '', message: '' })}
+                className="ml-2 hover:opacity-80"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Main Content */}
         <div className="max-w-4xl mx-auto p-6">
           <h1 className="text-3xl font-bold mb-6">Friends</h1>
@@ -157,7 +192,7 @@ export default function FriendsSearchPage() {
               onClick={() => setActiveTab('search')}
               className={`pb-3 px-4 font-medium transition ${
                 activeTab === 'search'
-                  ? 'border-b-2 border-blue-500 text-blue-600'
+                  ? 'border-b-2 border-green-600 text-green-600'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -167,7 +202,7 @@ export default function FriendsSearchPage() {
               onClick={() => setActiveTab('requests')}
               className={`pb-3 px-4 font-medium transition relative ${
                 activeTab === 'requests'
-                  ? 'border-b-2 border-blue-500 text-blue-600'
+                  ? 'border-b-2 border-green-600 text-green-600'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -191,12 +226,12 @@ export default function FriendsSearchPage() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search by name or email..."
-                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
                   />
                   <button
                     type="submit"
                     disabled={loading}
-                    className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                    className="btn-primary px-6 py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? 'Searching...' : 'Search'}
                   </button>
@@ -234,7 +269,7 @@ export default function FriendsSearchPage() {
                       ) : (
                         <button
                           onClick={() => sendFriendRequest(foundUser._id)}
-                          className="px-5 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium transition"
+                          className="btn-primary px-5 py-2 rounded-lg"
                         >
                           + Add Friend
                         </button>
@@ -301,7 +336,7 @@ export default function FriendsSearchPage() {
                       <div className="flex gap-2">
                         <button 
                           onClick={() => acceptRequest(request._id)}
-                          className="px-5 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-medium"
+                          className="btn-primary px-5 py-2 rounded-lg"
                         >
                           Accept
                         </button>

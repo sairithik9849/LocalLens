@@ -1,5 +1,8 @@
 @import "tailwindcss";
 @plugin "daisyui";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 html {
   scroll-behavior: smooth;
@@ -10,6 +13,117 @@ body {
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
 }
+/* src/app/globals.css */
+
+:root {
+  /* Primary Theme Colors */
+  --color-primary: #e48a04;        /* Orange - Navigation, Primary buttons */
+  --color-primary-hover: #c77603;  /* Darker orange for hover */
+  --color-primary-light: #f39c12;  /* Light orange - Avatars */
+  
+  /* Secondary Theme Colors */
+  --color-secondary: #27ae60;      /* Green - Feed, Interactions */
+  --color-secondary-hover: #229954; /* Darker green for hover */
+  --color-secondary-light: #2ecc71; /* Light green */
+  
+  /* Neutral Colors */
+  --color-text-primary: #2c3e50;   /* Dark text */
+  --color-text-secondary: #7f8c8d; /* Gray text */
+  --color-background: #f5f6fa;     /* Light background */
+  --color-white: #ffffff;
+  --color-border: #e1e8ed;
+  
+  /* Status Colors */
+  --color-success: #27ae60;
+  --color-error: #e74c3c;
+  --color-warning: #f39c12;
+  --color-info: #3498db;
+}
+
+/* Utility Classes for Theme Colors */
+.bg-primary {
+  background-color: var(--color-primary);
+}
+
+.bg-primary:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.bg-secondary {
+  background-color: var(--color-secondary);
+}
+
+.bg-secondary:hover {
+  background-color: var(--color-secondary-hover);
+}
+
+.text-primary {
+  color: var(--color-primary);
+}
+
+.text-secondary {
+  color: var(--color-secondary);
+}
+
+.border-primary {
+  border-color: var(--color-primary);
+}
+
+.border-secondary {
+  border-color: var(--color-secondary);
+}
+
+/* Button Styles */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-hover);
+  opacity: 0.9;
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background-color: var(--color-secondary);
+  color: var(--color-white);
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-secondary-hover);
+  opacity: 0.9;
+}
+
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Link hover effect */
+.link-primary:hover {
+  color: var(--color-primary);
+}
+
+.link-secondary:hover {
+  color: var(--color-secondary);
+}
+
+
+
+
 
 @keyframes fadeInUp {
   from {

@@ -21,6 +21,7 @@ export default function FeedPage() {
   const [userProfile, setUserProfile] = useState(null);
   const [suggestedFriends, setSuggestedFriends] = useState([]);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [expandedImage, setExpandedImage] = useState(null);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -356,7 +357,7 @@ export default function FeedPage() {
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-6 p-4 lg:p-6">
           {/* Left Sidebar - Profile (Hidden on mobile/tablet, shown on lg+) */}
-          <div className="hidden lg:block w-80 shrink-0">
+          <div className="hidden lg:block w-80 flex-shrink-0">
             <div className="bg-white rounded-lg shadow p-6 sticky top-24">
               <div className="text-center">
                 <img
@@ -456,13 +457,13 @@ export default function FeedPage() {
               <div className="mt-6 space-y-2">
                 <a
                   href="/profile"
-                  className="block w-full py-2 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-center font-medium"
+                  className="btn-secondary block w-full py-2 px-4 rounded-lg text-center"
                 >
                   View Profile
                 </a>
                 <a
                   href="/friends/search"
-                  className="block w-full py-2 px-4 border border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition text-center font-medium"
+                  className="block w-full py-2 px-4 border border-secondary text-secondary rounded-lg hover:bg-secondary-50 transition text-center font-medium"
                 >
                   Find Friends
                 </a>
@@ -529,7 +530,7 @@ export default function FeedPage() {
                   <button
                     type="submit"
                     disabled={isPosting || (!newPostContent.trim() && selectedImages.length === 0)}
-                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition font-medium"
+                    className="btn-secondary px-6 py-2 rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed"
                   >
                     {isPosting ? 'Posting...' : 'Post'}
                   </button>
@@ -540,7 +541,7 @@ export default function FeedPage() {
             {/* Posts Feed - Same as before, keeping all post display logic */}
             {loading ? (
               <div className="flex justify-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-secondary"></div>
               </div>
             ) : posts.length === 0 ? (
               <div className="bg-white rounded-lg shadow p-12 text-center">
@@ -591,7 +592,7 @@ export default function FeedPage() {
                             src={image}
                             alt={`Post image ${index + 1}`}
                             className="w-full h-64 object-cover cursor-pointer hover:opacity-90 transition"
-                            onClick={() => window.open(image, '_blank')}
+                            onClick={() => setExpandedImage(image)}
                           />
                         </div>
                       ))}
@@ -601,10 +602,10 @@ export default function FeedPage() {
                   <div className="px-6 py-4 border-t border-gray-100 flex items-center gap-8">
                     <button
                       onClick={() => toggleLike(post._id)}
-                      className="flex items-center gap-2 text-gray-600 hover:text-green-600 transition"
+                      className="flex items-center gap-2 text-gray-600 hover:text-secondary transition"
                     >
                       <svg
-                        className={`w-6 h-6 ${post.isLiked ? 'fill-green-600 text-green-600' : ''}`}
+                        className={`w-6 h-6 ${post.isLiked ? 'fill-secondary text-secondary' : ''}`}
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -615,7 +616,7 @@ export default function FeedPage() {
                     </button>
                     <button
                       onClick={() => setShowComments({ ...showComments, [post._id]: !showComments[post._id] })}
-                      className="flex items-center gap-2 text-gray-600 hover:text-green-600 transition"
+                      className="flex items-center gap-2 text-gray-600 hover:text-secondary transition"
                     >
                       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -624,7 +625,7 @@ export default function FeedPage() {
                     </button>
                     <button
                       onClick={() => sharePost(post._id)}
-                      className="flex items-center gap-2 text-gray-600 hover:text-green-600 transition"
+                      className="flex items-center gap-2 text-gray-600 hover:text-secondary transition"
                     >
                       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
@@ -641,12 +642,12 @@ export default function FeedPage() {
                           value={commentInputs[post._id] || ''}
                           onChange={(e) => setCommentInputs({ ...commentInputs, [post._id]: e.target.value })}
                           placeholder="Write a comment..."
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-secondary focus:border-transparent outline-none"
                           onKeyPress={(e) => e.key === 'Enter' && addComment(post._id)}
                         />
                         <button
                           onClick={() => addComment(post._id)}
-                          className="px-4 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 font-medium"
+                          className="btn-secondary px-4 py-2 rounded-full"
                         >
                           Post
                         </button>
@@ -659,7 +660,7 @@ export default function FeedPage() {
                               <img
                                 src={comment.user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.user.name)}&background=f39c12&color=fff`}
                                 alt={comment.user.name}
-                                className="w-10 h-10 rounded-full shrink-0"
+                                className="w-10 h-10 rounded-full flex-shrink-0"
                               />
                               <div className="flex-1">
                                 <div className="bg-gray-100 rounded-lg px-4 py-3">
@@ -669,13 +670,13 @@ export default function FeedPage() {
                                 <div className="flex items-center gap-4 mt-1 px-2">
                                   <button 
                                     onClick={() => toggleCommentLike(post._id, comment._id)}
-                                    className={`text-xs hover:text-green-600 ${comment.isLiked ? 'text-green-600 font-semibold' : 'text-gray-500'}`}
+                                    className={`text-xs hover:text-secondary ${comment.isLiked ? 'text-secondary font-semibold' : 'text-gray-500'}`}
                                   >
                                     {comment.isLiked ? '❤️' : '🤍'} Like ({comment.likesCount})
                                   </button>
                                   <button
                                     onClick={() => setShowReplies({ ...showReplies, [comment._id]: !showReplies[comment._id] })}
-                                    className="text-xs text-gray-500 hover:text-green-600"
+                                    className="text-xs text-gray-500 hover:text-secondary"
                                   >
                                     Reply ({comment.replies.length})
                                   </button>
@@ -689,7 +690,7 @@ export default function FeedPage() {
                                         <img
                                           src={reply.user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(reply.user.name)}&background=f39c12&color=fff`}
                                           alt={reply.user.name}
-                                          className="w-6 h-6 rounded-full shrink-0"
+                                          className="w-6 h-6 rounded-full flex-shrink-0"
                                         />
                                         <div className="flex-1">
                                           <div className="bg-gray-100 rounded-lg px-3 py-2">
@@ -707,12 +708,12 @@ export default function FeedPage() {
                                         value={replyInputs[comment._id] || ''}
                                         onChange={(e) => setReplyInputs({ ...replyInputs, [comment._id]: e.target.value })}
                                         placeholder="Write a reply..."
-                                        className="flex-1 px-3 py-1 text-sm border border-gray-300 rounded-full focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+                                        className="flex-1 px-3 py-1 text-sm border border-gray-300 rounded-full focus:ring-2 focus:ring-secondary focus:border-transparent outline-none"
                                         onKeyPress={(e) => e.key === 'Enter' && addReply(post._id, comment._id)}
                                       />
                                       <button
                                         onClick={() => addReply(post._id, comment._id)}
-                                        className="px-3 py-1 text-sm bg-green-600 text-white rounded-full hover:bg-green-700"
+                                        className="btn-secondary px-3 py-1 text-sm rounded-full"
                                       >
                                         Reply
                                       </button>
@@ -732,13 +733,13 @@ export default function FeedPage() {
           </div>
 
           {/* Right Sidebar - Suggestions & Events (Hidden on mobile, shown on tablet+) */}
-          <div className="hidden md:block w-80 shrink-0">
+          <div className="hidden md:block w-80 flex-shrink-0">
             <div className="space-y-6 sticky top-24">
               {/* Suggested Friends */}
               <div className="bg-white rounded-lg shadow p-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-bold text-gray-900">Suggested Friends</h3>
-                  <Link href="/friends/search" className="text-xs text-green-600 hover:underline">
+                  <Link href="/friends/search" className="text-xs text-secondary hover:underline">
                     See all
                   </Link>
                 </div>
@@ -763,7 +764,7 @@ export default function FeedPage() {
                         </div>
                         <Link
                           href="/friends/search"
-                          className="text-xs text-green-600 hover:text-green-700 font-medium"
+                          className="text-xs text-secondary hover:text-secondary-hover font-medium"
                         >
                           Add
                         </Link>
@@ -777,7 +778,7 @@ export default function FeedPage() {
               <div className="bg-white rounded-lg shadow p-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-bold text-gray-900">Upcoming Events</h3>
-                  <Link href="/events" className="text-xs text-green-600 hover:underline">
+                  <Link href="/events" className="text-xs text-secondary hover:underline">
                     See all
                   </Link>
                 </div>
@@ -792,11 +793,11 @@ export default function FeedPage() {
                         className="block p-3 rounded-lg hover:bg-gray-50 transition border border-gray-100"
                       >
                         <div className="flex gap-3">
-                          <div className="shrink-0 w-12 h-12 bg-green-100 rounded-lg flex flex-col items-center justify-center">
+                          <div className="flex-shrink-0 w-12 h-12 bg-green-100 rounded-lg flex flex-col items-center justify-center">
                             <span className="text-xs text-green-700 font-bold">
                               {new Date(event.eventDate).toLocaleDateString('en-US', { month: 'short' }).toUpperCase()}
                             </span>
-                            <span className="text-lg font-bold text-green-600">
+                            <span className="text-lg font-bold text-secondary">
                               {new Date(event.eventDate).getDate()}
                             </span>
                           </div>
@@ -823,6 +824,29 @@ export default function FeedPage() {
           </div>
         </div>
       </div>
+
+      {/* Image Expansion Modal */}
+      {expandedImage && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
+          onClick={() => setExpandedImage(null)}
+        >
+          <button
+            onClick={() => setExpandedImage(null)}
+            className="absolute top-4 right-4 text-white hover:text-gray-300 transition"
+          >
+            <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <img
+            src={expandedImage}
+            alt="Expanded view"
+            className="max-w-full max-h-full object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </>
   );
 }
