@@ -3,13 +3,16 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
+import { initializeApp, getApps } from 'firebase/app';
 import { auth } from '@/firebase/config';
+import { getFirebaseEnv } from '@/firebase/fetchEnvFromGist';
 import ReportCard from '@/app/components/reportCard';
 import UserCard from '@/app/components/userCard';
 
 export default function AdminPage() {
   const [user, setUser] = useState(null);
+  const [redirecting, setRedirecting] = useState(false);
 
   const [reports, setReports] = useState([]);
   const [reportsPage, setReportsPage] = useState(1);
@@ -25,39 +28,97 @@ export default function AdminPage() {
   const router = useRouter();
 
   const checkAdmin = async (currentUser) => {
-    const token = await currentUser.getIdToken();
-    const { data } = await axios.get('/api/admin', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return data === true;
+    try {
+      const token = await currentUser.getIdToken();
+      const { data } = await axios.get('/api/admin', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return data === true;
+    } catch (error) {
+      // If there's an error checking admin status, treat as non-admin
+      // This prevents showing errors to non-admin users
+      console.error('Admin check failed:', error);
+      return false;
+    }
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (!currentUser) {
-        router.push('/login');
+    let unsubscribe = null;
+
+    const initializeAuth = async () => {
+      let currentAuth = auth;
+
+      // If auth is not available (no .env.local), fetch from Gist and initialize
+      if (!currentAuth) {
+        // Check if Firebase is already initialized
+        const apps = getApps();
+        if (apps.length > 0) {
+          currentAuth = getAuth(apps[0]);
+        } else {
+          // Fetch config from Gist
+          const config = await getFirebaseEnv();
+
+          // Validate config
+          if (!config.apiKey || !config.authDomain || !config.projectId) {
+            console.error('Firebase configuration is incomplete. Please check your Gist or .env.local file.');
+            return;
+          }
+
+          // Initialize Firebase
+          const app = initializeApp(config);
+          currentAuth = getAuth(app);
+        }
+      }
+
+      if (!currentAuth) {
+        console.error('Failed to initialize Firebase auth. Please check your Gist or .env.local file.');
         return;
       }
 
-      try {
-        const admin = await checkAdmin(currentUser);
-        setIsAdmin(admin);
-        setAdminChecked(true);
-
-        if (!admin) {
-          router.push('/login');
+      // Set up auth state listener
+      unsubscribe = onAuthStateChanged(currentAuth, async (currentUser) => {
+        if (!currentUser) {
+          if (!redirecting) {
+            setRedirecting(true);
+            router.push('/login');
+          }
           return;
         }
 
-        setUser(currentUser);
-      } catch (err) {
-        console.error('Admin check failed:', err);
-        router.push('/login');
-      }
-    });
+        try {
+          const admin = await checkAdmin(currentUser);
+          setIsAdmin(admin);
+          setAdminChecked(true);
 
-    return () => unsubscribe();
-  }, [router]);
+          if (!admin) {
+            if (!redirecting) {
+              setRedirecting(true);
+              router.push('/login');
+            }
+            return;
+          }
+
+          setUser(currentUser);
+        } catch (err) {
+          console.error('Admin check failed:', err);
+          if (!redirecting) {
+            setRedirecting(true);
+            router.push('/login');
+          }
+        }
+      });
+
+      return () => {
+        if (unsubscribe) unsubscribe();
+      };
+    };
+
+    initializeAuth();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [router, redirecting]);
 
   const fetchReports = async (page = reportsPage) => {
     if (!user || !isAdmin) return [];
@@ -130,6 +191,56 @@ export default function AdminPage() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      // Get the current auth instance
+      let currentAuth = auth;
+      if (!currentAuth) {
+        const apps = getApps();
+        if (apps.length > 0) {
+          currentAuth = getAuth(apps[0]);
+        }
+      }
+
+      if (currentAuth) {
+        // Get token for cache invalidation if needed
+        let idToken = null;
+        try {
+          if (currentAuth.currentUser) {
+            idToken = await currentAuth.currentUser.getIdToken();
+          }
+        } catch (tokenError) {
+          console.warn('Could not get ID token for cache invalidation:', tokenError);
+        }
+
+        // Invalidate token cache if available
+        if (idToken) {
+          try {
+            await fetch('/api/auth/logout', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${idToken}`,
+                'Content-Type': 'application/json',
+              },
+            });
+          } catch (cacheError) {
+            console.warn('Failed to invalidate token cache:', cacheError);
+          }
+        }
+
+        // Sign out from Firebase
+        await signOut(currentAuth);
+        
+        // Redirect to login page
+        router.push('/login');
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still redirect even if logout fails
+      router.push('/login');
+    }
+  };
+
   if (!adminChecked) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -145,6 +256,10 @@ export default function AdminPage() {
     );
   }
 
+  const totalReports = reports?.length ?? 0;
+  const totalUsers = users?.length ?? 0;
+  const bannedUsers = users?.filter(u => u?.moderation?.banned)?.length ?? 0;
+
   return (
     <div className="min-h-screen bg-slate-50 py-8">
       <div className="max-w-6xl mx-auto px-4 space-y-8">
@@ -156,13 +271,38 @@ export default function AdminPage() {
                 Moderate reports and manage users — quick actions live below.
               </p>
             </div>
-            <div>
+            <div className="flex items-center gap-3">
               <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-white border border-slate-200 shadow-sm">
                 Admin
               </span>
+              <button
+                onClick={handleLogout}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+                aria-label="Logout"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                Logout
+              </button>
             </div>
           </div>
         </header>
+
+        <section className="grid sm:grid-cols-3 gap-3">
+          <div className="bg-white border border-slate-200 rounded-lg p-3 shadow-sm">
+            <div className="text-xs text-slate-500">Open reports</div>
+            <div className="text-2xl font-semibold text-slate-800">{totalReports}</div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-lg p-3 shadow-sm">
+            <div className="text-xs text-slate-500">Users loaded (page)</div>
+            <div className="text-2xl font-semibold text-slate-800">{totalUsers}</div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-lg p-3 shadow-sm">
+            <div className="text-xs text-slate-500">Banned users</div>
+            <div className="text-2xl font-semibold text-slate-800">{bannedUsers}</div>
+          </div>
+        </section>
 
         <section className="grid md:grid-cols-2 gap-6">
           <div className="col-span-1">

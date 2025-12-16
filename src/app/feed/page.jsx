@@ -3,12 +3,16 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/firebase/AuthContext';
+import { useRequireNonAdmin } from '@/hooks/useRequireNonAdmin';
+import { useCheckBanned } from '@/hooks/useCheckBanned';
 import Navigation from '@/app/components/Navigation';
 import Link from 'next/link';
 import ReportPostModal from '@/app/components/ReportPostModal';
 
 export default function FeedPage() {
   const { user } = useAuth();
+  const { checkingAdmin } = useRequireNonAdmin();
+  const { checkingBanned } = useCheckBanned();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newPostContent, setNewPostContent] = useState('');
@@ -37,13 +41,19 @@ export default function FeedPage() {
 
 
   useEffect(() => {
+    // Don't fetch data if checking admin status, ban status, or if user is admin/banned (will be redirected)
+    if (checkingAdmin || checkingBanned) {
+      setLoading(true);
+      return;
+    }
+    
     if (user) {
       fetchPosts();
       fetchUserProfile();
       fetchSuggestedFriends();
       fetchUpcomingEvents();
     }
-  }, [user]);
+  }, [user, checkingAdmin, checkingBanned]);
 
   const fetchUserProfile = async () => {
     try {

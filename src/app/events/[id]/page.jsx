@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/firebase/AuthContext';
+import { useCheckBanned } from '@/hooks/useCheckBanned';
 import Navigation from '@/app/components/Navigation';
 import EditEventModal from '@/app/components/EditEventModal';
 import Link from 'next/link';
 
 export default function EventDetailPage() {
   const { user, loading: authLoading } = useAuth();
+  const { checkingBanned } = useCheckBanned();
   const router = useRouter();
   const params = useParams();
   const eventId = params?.id;
@@ -26,7 +28,7 @@ export default function EventDetailPage() {
   const [locationAddressLoading, setLocationAddressLoading] = useState(false);
 
   useEffect(() => {
-    if (authLoading) return;
+    if (authLoading || checkingBanned) return;
 
     if (!user) {
       router.push('/login');
@@ -81,7 +83,7 @@ export default function EventDetailPage() {
     };
 
     fetchEvent();
-  }, [user, authLoading, router, eventId]);
+  }, [user, authLoading, checkingBanned, router, eventId]);
 
   // Fetch address when event data is loaded
   useEffect(() => {

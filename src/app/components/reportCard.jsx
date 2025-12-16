@@ -3,23 +3,33 @@ import axios from "axios";
 import { getAuth } from "firebase/auth";
 import ViewPostModal from "./viewPostModal";
 
-export default function ReportCard({ report, onHandled }) {
+export default function ReportCard({ report = {}, onHandled }) {
   const [showPostModal, setShowPostModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleShowPostModal = () => setShowPostModal(true);
   const handleCloseModals = () => setShowPostModal(false);
 
+  const withError = (msg) => {
+    setErrorMessage(msg || "Something went wrong");
+    setTimeout(() => setErrorMessage(""), 4000);
+  };
+
   async function handleDelete() {
     setIsProcessing(true);
+    setErrorMessage("");
     try {
       const auth = getAuth();
       const current = auth.currentUser;
-      if (!current) return;
+      if (!current) {
+        withError("You must be signed in as admin");
+        return;
+      }
 
       const token = await current.getIdToken();
 
-      await axios.delete("/api/admin/", {
+      await axios.delete("/api/admin", {
         params: { blogId: report.blogId },
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -27,6 +37,7 @@ export default function ReportCard({ report, onHandled }) {
       if (typeof onHandled === "function") onHandled();
     } catch (err) {
       console.error("Delete failed:", err);
+      withError(err?.response?.data?.error || "Failed to delete post");
     } finally {
       setIsProcessing(false);
     }
@@ -34,37 +45,48 @@ export default function ReportCard({ report, onHandled }) {
 
   async function handleIgnore() {
     setIsProcessing(true);
+    setErrorMessage("");
     try {
       const auth = getAuth();
       const current = auth.currentUser;
-      if (!current) return;
+      if (!current) {
+        withError("You must be signed in as admin");
+        return;
+      }
 
       const token = await current.getIdToken();
 
-      await axios.post(
-        "/api/admin/",
-        { reportId: report._id },
-        {
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const params = new URLSearchParams();
+      params.append("reportId", report._id);
+
+      await axios.post("/api/admin", params.toString(), {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (typeof onHandled === "function") onHandled();
     } catch (err) {
       console.error("Ignore failed:", err);
+      withError(err?.response?.data?.error || "Failed to ignore report");
     } finally {
       setIsProcessing(false);
     }
   }
 
-  const reportedAt = new Date(report.reportedAt).toLocaleString();
+  const reportedAt = report.reportedAt
+    ? new Date(report.reportedAt).toLocaleString()
+    : "Unknown";
 
   const initials = (() => {
-    const name = report.reporterEmail || 'U';
-    return name.split(' ').map(s => s[0]).slice(0,2).join('').toUpperCase();
+    const name = report.reporterEmail || "U";
+    return name
+      .split(" ")
+      .map((s) => s[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase();
   })();
 
   return (
@@ -82,9 +104,18 @@ export default function ReportCard({ report, onHandled }) {
               <h3 className="text-lg font-medium text-slate-800">
                 {report.reason || 'Reported content'}
               </h3>
-              <p className="text-sm text-slate-500 mt-1">
-                Reported by <span className="font-medium text-slate-700">{ report.reporterEmail}</span>
-              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                {report.reporterEmail && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                    Reporter: {report.reporterEmail}
+                  </span>
+                )}
+                {report.reporteeEmail && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                    Author: {report.reporteeEmail}
+                  </span>
+                )}
+              </div>
             </div>
 
             <div className="text-sm text-slate-400">
@@ -140,6 +171,12 @@ export default function ReportCard({ report, onHandled }) {
               ) : 'Delete Post'}
             </button>
           </div>
+
+          {errorMessage && (
+            <div className="mt-3 text-sm text-rose-700 bg-rose-50 border border-rose-100 rounded-md px-3 py-2">
+              {errorMessage}
+            </div>
+          )}
         </div>
       </article>
       <ViewPostModal

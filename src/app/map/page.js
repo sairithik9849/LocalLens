@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/firebase/AuthContext';
+import { useCheckBanned } from '@/hooks/useCheckBanned';
 import Navigation from '@/app/components/Navigation';
 import MapContainer from '@/app/components/MapContainer';
 import MapFilters from '@/app/components/MapFilters';
@@ -11,6 +12,7 @@ import { getGoogleMapsApiKey } from '@/lib/gistApiKey';
 
 export default function MapPage() {
   const { user, loading: authLoading } = useAuth();
+  const { checkingBanned } = useCheckBanned();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -29,7 +31,7 @@ export default function MapPage() {
   const [mapKey, setMapKey] = useState(0); 
 
   useEffect(() => {
-    if (authLoading) {
+    if (authLoading || checkingBanned) {
       return;
     }
 
@@ -137,7 +139,7 @@ export default function MapPage() {
     };
 
     fetchUserZipcode();
-  }, [user, authLoading, router]);
+  }, [user, authLoading, checkingBanned, router]);
 
   useEffect(() => {
     if (authLoading || !user) {

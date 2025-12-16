@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/firebase/AuthContext';
+import { useCheckBanned } from '@/hooks/useCheckBanned';
 import Navigation from '@/app/components/Navigation';
 import Link from 'next/link';
 
 export default function YardSalesPage() {
   const { user, loading: authLoading } = useAuth();
+  const { checkingBanned } = useCheckBanned();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -21,7 +23,7 @@ export default function YardSalesPage() {
 
   useEffect(() => {
     // Wait for auth to finish loading before checking user
-    if (authLoading) {
+    if (authLoading || checkingBanned) {
       return;
     }
 
@@ -87,7 +89,7 @@ export default function YardSalesPage() {
     };
 
     fetchYardSales();
-  }, [user, authLoading, router, includePast]);
+  }, [user, authLoading, checkingBanned, router, includePast]);
 
   // Filter yard sales
   useEffect(() => {

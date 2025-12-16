@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/firebase/AuthContext';
+import { useRequireNonAdmin } from '@/hooks/useRequireNonAdmin';
+import { useCheckBanned } from '@/hooks/useCheckBanned';
 import Navigation from '@/app/components/Navigation';
 import EditIncidentModal from '@/app/components/EditIncidentModal';
 import { zipcodeToCoordsGoogle, zipcodeToCoords } from '@/lib/geocoding';
@@ -11,6 +13,8 @@ import Link from 'next/link';
 
 export default function IncidentsPage() {
   const { user, loading: authLoading } = useAuth();
+  const { checkingAdmin } = useRequireNonAdmin();
+  const { checkingBanned } = useCheckBanned();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -42,7 +46,7 @@ export default function IncidentsPage() {
 
   useEffect(() => {
     // Wait for auth to finish loading before checking user
-    if (authLoading) {
+    if (authLoading || checkingAdmin || checkingBanned) {
       return;
     }
 
@@ -256,7 +260,7 @@ export default function IncidentsPage() {
     };
 
     fetchUserPincode();
-  }, [user, authLoading, router]);
+  }, [user, authLoading, checkingAdmin, checkingBanned, router]);
 
   // Fetch address when viewing incident changes
   useEffect(() => {

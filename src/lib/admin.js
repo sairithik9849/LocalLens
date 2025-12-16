@@ -26,14 +26,24 @@ const getInfoByid = async (uid) => {
 export const isUserAdmin = async (uid) => {
     if (!uid) throw 'You must provide a UID';
 
-    const adminCollection = await users();
-    const userData = await adminCollection.findOne({ firebaseUid: uid });
+    try {
+        const adminCollection = await users();
+        const userData = await adminCollection.findOne({ firebaseUid: uid });
 
-    if (!userData) throw 'No admin user found with the provided UID';
+        // If user doesn't exist or doesn't have admin role, return false
+        if (!userData) {
+            return false;
+        }
 
-    if (userData.role && userData.role === 'admin') {
-        return true;
-    } else {
+        if (userData.role && userData.role === 'admin') {
+            return true;
+        } else {
+            return false;
+        }
+    } catch (error) {
+        // Log the error but return false for any database errors
+        // This prevents 500 errors for non-admin users
+        console.error('Error checking admin status:', error);
         return false;
     }
 }
@@ -105,6 +115,7 @@ export const getPageOfReports = async (page = 1, pageSize = 10, uid) => {
         const reporteeEmail = await getInfoByUid(blogExists.user)
         report.reporteeEmail = reporteeEmail.email
         report.body = blogExists.content
+        report.images = blogExists.images || []
         report.postedBy = blogExists.user
         report.postedOn = blogExists.createdAt
         report.location = blogExists.location

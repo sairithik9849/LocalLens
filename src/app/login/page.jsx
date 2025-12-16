@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import axios from "axios";
 import { useAuth } from "@/firebase/AuthContext";
 import { getAuthErrorMessage } from "@/firebase/authErrors";
 
@@ -20,7 +21,45 @@ function LoginForm() {
   useEffect(() => {
     // Redirect authenticated users away from login page
     if (!authLoading && user) {
-      router.replace("/feed");
+      // Check if user is banned, admin, or regular user and redirect accordingly
+      const checkAndRedirect = async () => {
+        try {
+          const token = await user.getIdToken();
+          
+          // First check if user is banned
+          const profileResponse = await fetch(`/api/users/profile?uid=${encodeURIComponent(user.uid)}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          
+          if (profileResponse.status === 403) {
+            // User is banned
+            router.replace("/banned");
+            return;
+          }
+          
+          if (profileResponse.ok) {
+            const profileData = await profileResponse.json();
+            if (profileData.user?.moderation?.banned === true) {
+              router.replace("/banned");
+              return;
+            }
+          }
+          
+          // Check if user is admin
+          const { data } = await axios.get('/api/admin', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (data === true) {
+            router.replace("/admin");
+          } else {
+            router.replace("/feed");
+          }
+        } catch (error) {
+          // If check fails, default to feed
+          router.replace("/feed");
+        }
+      };
+      checkAndRedirect();
     }
   }, [user, authLoading, router]);
 
@@ -44,12 +83,11 @@ function LoginForm() {
 
     try {
       await login(email, password);
-      // Redirect to feed page after successful login
-      router.push("/feed");
+      // The useEffect hook will handle redirect based on admin status
+      // Just set loading to false - redirect happens automatically
+      setLoading(false);
     } catch (err) {
       setError(getAuthErrorMessage(err));
-    } finally {
-      // Always reset loading state, even if navigation succeeds or fails
       setLoading(false);
     }
   };
@@ -60,12 +98,11 @@ function LoginForm() {
 
     try {
       await signInWithGoogle();
-      // Redirect to feed page after successful login
-      router.push("/feed");
+      // The useEffect hook will handle redirect based on admin status
+      // Just set loading to false - redirect happens automatically
+      setLoading(false);
     } catch (err) {
       setError(getAuthErrorMessage(err));
-    } finally {
-      // Always reset loading state, even if navigation succeeds or fails
       setLoading(false);
     }
   };

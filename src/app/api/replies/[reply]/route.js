@@ -1,5 +1,5 @@
 import * as homepageData from '@/lib/homepage.js';
-import admin from "@/firebase/firebaseAuth";
+import admin, { initializeAdmin } from "@/firebase/firebaseAuth";
 
 function splitString(input) {
     const parts = input.split('-').filter(part => part !== '');
@@ -15,6 +15,7 @@ function splitString(input) {
 export async function POST(req, { params }) {
 
     try {
+        await initializeAdmin();
         const { reply } = await params;
         const text = await req.text();
         let userData = Object.fromEntries(new URLSearchParams(text));
@@ -41,6 +42,7 @@ export async function POST(req, { params }) {
 export async function PATCH(req, { params }) {
 
     try {
+        await initializeAdmin();
         const { reply } = await params;
         const text = await req.text();
         let userData = Object.fromEntries(new URLSearchParams(text));
@@ -68,6 +70,7 @@ export async function PATCH(req, { params }) {
 
 export async function GET(req, { params }) {
     try {
+        await initializeAdmin();
         const { reply } = await params;
         const authHeader = req.headers.get("authorization");
         

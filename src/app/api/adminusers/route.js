@@ -1,9 +1,10 @@
 import * as adminData from '@/lib/admin.js';
-import admin from "@/firebase/firebaseAuth";
+import admin, { initializeAdmin } from "@/firebase/firebaseAuth";
 import { NextResponse } from "next/server";
 
 export async function GET(req) {
   try {
+    await initializeAdmin();
     const url = new URL(req.url)
     const page = Number(url.searchParams.get('page') ?? '1')
     const pageSize = Number(url.searchParams.get('pageSize') ?? '10')
@@ -30,6 +31,7 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
+      await initializeAdmin();
       const text = await req.text();
       let userData = Object.fromEntries(new URLSearchParams(text));
         const authHeader = req.headers.get("authorization");

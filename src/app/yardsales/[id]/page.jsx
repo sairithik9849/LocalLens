@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/firebase/AuthContext';
+import { useCheckBanned } from '@/hooks/useCheckBanned';
 import Navigation from '@/app/components/Navigation';
 import { GoogleMap, LoadScript } from '@react-google-maps/api';
 import AdvancedMarker from '@/app/components/AdvancedMarker';
@@ -14,6 +15,7 @@ const libraries = ['places', 'marker'];
 
 export default function YardSaleDetailPage() {
   const { user, loading: authLoading } = useAuth();
+  const { checkingBanned } = useCheckBanned();
   const router = useRouter();
   const params = useParams();
   const { apiKey, isGoogleMapsLoaded, isLoadingKey } = useGoogleMapsLoader(libraries);
@@ -26,7 +28,7 @@ export default function YardSaleDetailPage() {
   const [editingYardSale, setEditingYardSale] = useState(null);
 
   useEffect(() => {
-    if (authLoading) return;
+    if (authLoading || checkingBanned) return;
 
     if (!user) {
       router.push('/login');
@@ -70,7 +72,7 @@ export default function YardSaleDetailPage() {
     if (params.id) {
       fetchYardSale();
     }
-  }, [user, authLoading, router, params.id]);
+  }, [user, authLoading, checkingBanned, router, params.id]);
 
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this yard sale? This action cannot be undone.')) {

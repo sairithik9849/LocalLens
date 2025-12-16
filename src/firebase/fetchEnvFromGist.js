@@ -99,6 +99,7 @@ async function fetchEnvFromGist() {
 
 /**
  * Gets environment variable value, checking Gist first, then process.env
+ * Works both client-side and server-side
  */
 export async function getEnvVar(key) {
   // In production or if .env.local exists, prefer process.env
@@ -106,16 +107,14 @@ export async function getEnvVar(key) {
     return process.env[key];
   }
 
-  // Try to fetch from Gist (client-side only)
-  if (typeof window !== "undefined") {
-    try {
-      const gistEnv = await fetchEnvFromGist();
-      if (gistEnv && gistEnv[key]) {
-        return gistEnv[key];
-      }
-    } catch (error) {
-      // Silently fail
+  // Try to fetch from Gist (works on both client and server)
+  try {
+    const gistEnv = await fetchEnvFromGist();
+    if (gistEnv && gistEnv[key]) {
+      return gistEnv[key];
     }
+  } catch (error) {
+    // Silently fail and fall back to process.env
   }
 
   // Fallback to process.env
@@ -181,5 +180,51 @@ export async function getFirebaseEnv() {
     storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
     messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  };
+}
+
+/**
+ * Gets Firebase Admin SDK environment variables (server-side)
+ * Fetches from Gist if not in process.env
+ */
+export async function getFirebaseAdminEnv() {
+  // If all env vars exist in process.env, use them
+  if (
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID &&
+    process.env.NEXT_PUBLIC_PRIVATE_KEY &&
+    process.env.NEXT_PUBLIC_FIREBASE_CLIENT_EMAIL
+  ) {
+    return {
+      project_id: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+      private_key: process.env.NEXT_PUBLIC_PRIVATE_KEY,
+      client_email: process.env.NEXT_PUBLIC_FIREBASE_CLIENT_EMAIL,
+    };
+  }
+
+  // Try to fetch from Gist (works on both client and server)
+  try {
+    const gistEnv = await fetchEnvFromGist();
+    if (gistEnv) {
+      return {
+        project_id:
+          gistEnv.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
+          process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+        private_key:
+          gistEnv.NEXT_PUBLIC_PRIVATE_KEY ||
+          process.env.NEXT_PUBLIC_PRIVATE_KEY,
+        client_email:
+          gistEnv.NEXT_PUBLIC_FIREBASE_CLIENT_EMAIL ||
+          process.env.NEXT_PUBLIC_FIREBASE_CLIENT_EMAIL,
+      };
+    }
+  } catch (error) {
+    // Silently fail
+  }
+
+  // Fallback to process.env
+  return {
+    project_id: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    private_key: process.env.NEXT_PUBLIC_PRIVATE_KEY,
+    client_email: process.env.NEXT_PUBLIC_FIREBASE_CLIENT_EMAIL,
   };
 }

@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/firebase/AuthContext";
+import { useCheckBanned } from "@/hooks/useCheckBanned";
 import { validatePincode } from "@/lib/pincodeValidation.js";
 import { validateNameField, validateCity, isProfileComplete } from "@/lib/userProfileCheck.js";
 
@@ -20,10 +21,15 @@ export default function SetupPage() {
   const [firstNameError, setFirstNameError] = useState("");
   const [lastNameError, setLastNameError] = useState("");
   const [cityError, setCityError] = useState("");
-  const { user, refreshUserProfile } = useAuth();
+  const { user, refreshUserProfile, loading: authLoading } = useAuth();
+  const { checkingBanned } = useCheckBanned();
   const router = useRouter();
 
   useEffect(() => {
+    if (authLoading || checkingBanned) {
+      return;
+    }
+
     if (!user) {
       router.push("/login");
       return;

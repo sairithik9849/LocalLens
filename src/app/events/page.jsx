@@ -3,11 +3,15 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/firebase/AuthContext';
+import { useRequireNonAdmin } from '@/hooks/useRequireNonAdmin';
+import { useCheckBanned } from '@/hooks/useCheckBanned';
 import Navigation from '@/app/components/Navigation';
 import Link from 'next/link';
 
 export default function EventsPage() {
   const { user, loading: authLoading } = useAuth();
+  const { checkingAdmin } = useRequireNonAdmin();
+  const { checkingBanned } = useCheckBanned();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -22,7 +26,7 @@ export default function EventsPage() {
 
   useEffect(() => {
     // Wait for auth to finish loading before checking user
-    if (authLoading) {
+    if (authLoading || checkingAdmin || checkingBanned) {
       return;
     }
 
@@ -112,7 +116,7 @@ export default function EventsPage() {
     };
 
     fetchEvents();
-  }, [user, authLoading, router, includePast]);
+  }, [user, authLoading, checkingAdmin, checkingBanned, router, includePast]);
 
   // Filter events
   useEffect(() => {

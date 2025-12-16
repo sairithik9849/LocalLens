@@ -1,9 +1,10 @@
 import * as homepageData from '@/lib/homepage.js';
-import admin from "@/firebase/firebaseAuth";
+import admin, { initializeAdmin } from "@/firebase/firebaseAuth";
 
 
 export async function GET(req, { params }) {
     try {
+        await initializeAdmin();
         const { id } = await params;
         const authHeader = req.headers.get("authorization");
 
@@ -27,6 +28,7 @@ export async function GET(req, { params }) {
 
 export async function POST(req, { params }) {
     try {
+            await initializeAdmin();
             const { id } = await params;
         const text = await req.text();
         let userData = Object.fromEntries(new URLSearchParams(text));

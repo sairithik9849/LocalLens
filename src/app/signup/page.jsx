@@ -4,6 +4,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import axios from "axios";
 import { useAuth } from "@/firebase/AuthContext";
 import { getAuthErrorMessage } from "@/firebase/authErrors";
 import {
@@ -26,7 +27,45 @@ export default function SignupPage() {
   useEffect(() => {
     // Redirect authenticated users away from signup page
     if (!authLoading && user) {
-      router.replace("/feed");
+      // Check if user is banned, admin, or regular user and redirect accordingly
+      const checkAndRedirect = async () => {
+        try {
+          const token = await user.getIdToken();
+          
+          // First check if user is banned
+          const profileResponse = await fetch(`/api/users/profile?uid=${encodeURIComponent(user.uid)}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          
+          if (profileResponse.status === 403) {
+            // User is banned
+            router.replace("/banned");
+            return;
+          }
+          
+          if (profileResponse.ok) {
+            const profileData = await profileResponse.json();
+            if (profileData.user?.moderation?.banned === true) {
+              router.replace("/banned");
+              return;
+            }
+          }
+          
+          // Check if user is admin
+          const { data } = await axios.get('/api/admin', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (data === true) {
+            router.replace("/admin");
+          } else {
+            router.replace("/feed");
+          }
+        } catch (error) {
+          // If check fails, default to feed
+          router.replace("/feed");
+        }
+      };
+      checkAndRedirect();
     }
   }, [user, authLoading, router]);
 
@@ -51,8 +90,9 @@ export default function SignupPage() {
 
     try {
       await signup(email, password);
-      // Redirect to feed - it will check profile completeness and redirect to setup if needed
-      router.push("/feed");
+      // The useEffect hook will handle redirect based on admin status
+      // Just set loading to false - redirect happens automatically
+      setLoading(false);
     } catch (err) {
       setError(getAuthErrorMessage(err));
       setLoading(false);
@@ -65,8 +105,9 @@ export default function SignupPage() {
 
     try {
       await signInWithGoogle();
-      // Redirect to feed - it will check profile completeness and redirect to setup if needed
-      router.push("/feed");
+      // The useEffect hook will handle redirect based on admin status
+      // Just set loading to false - redirect happens automatically
+      setLoading(false);
     } catch (err) {
       setError(getAuthErrorMessage(err));
       setLoading(false);
