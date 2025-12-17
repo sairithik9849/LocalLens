@@ -1,0 +1,24 @@
+import {dbConnection} from './mongoConnection.js';
+
+/* This will allow you to have one reference to each collection per app */
+/* Feel free to copy and paste this this */
+const getCollectionFn = (collection) => {
+  let _col = undefined;
+
+  return async () => {
+    if (!_col) {
+      const db = await dbConnection();
+      _col = await db.collection(collection);
+    }
+
+    return _col;
+  };
+};
+
+/* Now, you can list your collections here: */
+export const blog = getCollectionFn('blog');
+export const events = getCollectionFn('events');
+export const users = getCollectionFn('users');
+export const incidents = getCollectionFn('incidents');
+export const admin = getCollectionFn('admin');
+export const posts = getCollectionFn('posts');

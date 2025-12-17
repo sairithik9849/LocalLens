@@ -2,13 +2,16 @@
   "name": "local-lens_async_avengers",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "worker:geocoding": "node src/workers/geocodingWorker.js"
   },
   "dependencies": {
+<<<<<<< HEAD
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "next": "16.0.1"
@@ -18,5 +21,32 @@
     "tailwindcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "16.0.1"
+=======
+    "@react-google-maps/api": "^2.20.7",
+    "amqp-connection-manager": "^5.0.0",
+    "amqplib": "^0.10.9",
+    "axios": "^1.13.2",
+    "firebase": "^12.6.0",
+    "firebase-admin": "^13.6.0",
+    "mongodb": "^7.0.0",
+    "mongoose": "^9.0.1",
+    "next": "^16.0.10",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "react-modal": "^3.16.3",
+    "redis": "^4.7.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.22",
+    "daisyui": "^5.5.5",
+    "eslint": "^9",
+    "eslint-config-next": "16.0.1",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4"
+>>>>>>> dev
   }
 }
