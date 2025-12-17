@@ -103,6 +103,15 @@ Must have **Redis** and **RabbitMQ** installed locally.
    
    Navigate to [http://localhost:3000](http://localhost:3000)
 
+### Admin Access
+
+To access the admin dashboard, use the following credentials:
+
+- **Email**: `admin@admin.admin`
+- **Password**: `Admin@911`
+
+Log in at [http://localhost:3000/login](http://localhost:3000/login) and navigate to the admin dashboard.
+
 ### Building for Production
 
 ```bash
