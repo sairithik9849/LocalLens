@@ -1,0 +1,107 @@
+services:
+  # Next.js App
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: locallens-app
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGODB_URI=${MONGODB_URI}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=guest
+      - RABBITMQ_PASSWORD=guest
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - NEXT_PUBLIC_FIREBASE_API_KEY=${NEXT_PUBLIC_FIREBASE_API_KEY}
+      - NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}
+      - NEXT_PUBLIC_FIREBASE_PROJECT_ID=${NEXT_PUBLIC_FIREBASE_PROJECT_ID}
+      - NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=${NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}
+      - NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}
+      - NEXT_PUBLIC_FIREBASE_APP_ID=${NEXT_PUBLIC_FIREBASE_APP_ID}
+      - NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+      - NODE_ENV=development
+    depends_on:
+      - mongodb
+      - redis
+      - rabbitmq
+    volumes:
+      - ./src:/app/src
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - locallens
+
+  # Worker
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: locallens-worker
+    environment:
+      - MONGODB_URI=${MONGODB_URI}
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=guest
+      - RABBITMQ_PASSWORD=guest
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+      - NODE_ENV=development
+    depends_on:
+      - mongodb
+      - rabbitmq
+    volumes:
+      - ./src:/app/src
+      - /app/node_modules
+    command: npm run worker:geocoding
+    networks:
+      - locallens
+
+  # MongoDB
+  mongodb:
+    image: mongo:7
+    container_name: locallens-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - locallens
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: locallens-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - locallens
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: locallens-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - locallens
+
+networks:
+  locallens:
+    driver: bridge
+
+volumes:
+  mongodb-data:
+  redis-data:
+  rabbitmq-data:

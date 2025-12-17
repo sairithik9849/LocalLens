@@ -1,0 +1,27 @@
+# Dockerfile.dev
+FROM node:20
+
+WORKDIR /app
+
+# Install build tools for native modules
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy package files
+COPY package.json package-lock.json* ./
+
+# Install dependencies
+RUN npm install
+
+# Rebuild native modules for Linux
+RUN npm rebuild
+
+# Copy source code
+COPY . .
+
+EXPOSE 3000
+
+CMD ["npm", "run", "dev"]
