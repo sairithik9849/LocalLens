@@ -1,129 +1,34 @@
 # LocalLens – Neighborhood Insights Platform
 
-**Group Name:** Async Avengers  
+LocalLens is a hyper-local social app built with Next.js that lets neighbors share posts, events, incidents, and yard sales on an interactive map backed by MongoDB, Firebase Auth, Redis caching, and RabbitMQ jobs. It emphasizes fast geocoding, neighborhood-scoped content, and a lightweight moderation/admin flow.
 
-**Group Members:**  
-- Sairithik Komuravelly — CWID: 20029694  
-- Akshay Kumar Talur Narasimmulu — CWID: 20032052  
-- Anik Doshi — CWID: 20034825  
-- Deming Tracy — CWID: 10479551  
+## What’s Inside
+- Framework: Next.js 16, React 19, API routes, App Router
+- Auth: Firebase client + Admin SDK
+- Data: MongoDB via Mongoose, Redis cache
+- Messaging/Workers: RabbitMQ, geocoding worker
+- Maps/Geo: Google Maps JS + Geocoding (with OpenStreetMap fallback)
+- UI/Styling: Tailwind CSS 4, DaisyUI, React Modal
+- Ops: Docker/Docker Compose for app + MongoDB + Redis
 
----
+## Local Setup (Node)
+1) Prereqs: Node 18+, npm, MongoDB and Redis instances (local or remote). RabbitMQ recommended for queue-backed geocoding.
+2) Install deps: `npm install`
+3) Run web app: `npm run dev`
+4) (Optional) Run geocoding worker for queued jobs: `npm run worker:geocoding`
 
-## 1. Project Overview & Vision
+### Using Docker Compose
+```bash
+docker-compose -f docker-compose.dev.yml up --build
+```
+The compose file brings up the app, MongoDB, and Redis. If you need RabbitMQ, add a service or run it separately and update the env values.
 
-**LocalLens** is a dynamic web application designed to provide users with data-driven insights into local neighborhoods. In an age where information is abundant but fragmented, the platform aggregates and visualizes key community trends, empowering users to make informed decisions about where to live, open a business, or invest.
+## How It Works
+- Auth: Firebase client SDK handles user sessions; Admin SDK backs secure server checks.
+- Data flow: Next.js API routes persist users, posts, events, incidents, replies, and yard sales in MongoDB.
+- Geocoding: Google Maps API (with OpenStreetMap fallback) resolves ZIP codes; results can be queued through RabbitMQ and cached in Redis.
+- Map UX: Posts/events/incidents render as map markers with filters; weather and location helpers reuse the Google key.
+- Admin/Moderation: Admin routes support bans, reports, and content review; a geocoding worker consumes queued location jobs.
 
-By consolidating data such as rent fluctuations, crime rates, new business openings, and local reviews, LocalLens transforms raw data into a clear, interactive, and intuitive experience.
-
-### Vision
-LocalLens aims to become a **one-stop platform for neighborhood intelligence**. Users will be able to:
-- Explore an interactive neighborhood map
-- View trend-based heatmaps
-- Analyze historical data through intuitive visualizations
-
-Whether for families seeking safe communities, renters comparing housing costs, or entrepreneurs scouting new locations, LocalLens provides actionable neighborhood insights.
-
----
-
-## 2. Course Technologies
-
-The application will be built using the following core technologies covered in the course:
-
-### a. Next.js
-Next.js serves as the primary full-stack framework:
-- Server-side rendered React frontend for fast, SEO-friendly performance
-- Built-in API routes for backend logic
-- Handles data fetching, request processing, and external API communication
-
-### b. Firebase Authentication
-Firebase Authentication manages secure user access:
-- Email/password authentication
-- Social login support (e.g., Google)
-- Session management and user identity
-
-This enables user-specific features such as:
-- Saving favorite neighborhoods
-- Personalized dashboards
-- Posting reviews and local content securely
-
-### c. Redis
-Redis is used as a high-speed, in-memory caching layer:
-- Cache expensive Google Maps API responses (e.g., geocoding)
-- Store pre-aggregated neighborhood trend data
-- Improve performance and scalability for frequent queries
-
----
-
-## 3. Independent Technologies
-
-The following technologies operate independently from the Node.js runtime and support persistence, scalability, and deployment.
-
-### a. Docker
-Docker and Docker Compose are used to containerize the entire stack:
-- Next.js application
-- MongoDB database
-- Redis cache
-
-Benefits include:
-- Consistent development environments
-- Simplified setup for all team members
-- Easier deployment to cloud infrastructure
-
-### b. RabbitMQ
-RabbitMQ acts as an asynchronous message broker:
-- Queues posts, alerts, and notifications
-- Ensures reliable and scalable message delivery
-- Prevents server overload during high traffic
-
----
-
-## 4. Key Feature Implementation
-
-### Data Aggregation & Storage
-- Scheduled backend jobs or serverless functions
-- Fetch data from third-party APIs (crime data, real estate prices, Google Places)
-- Normalize and store data in MongoDB
-
-### Interactive Map & Heatmap Visualization
-- Built with Next.js and Google Maps JavaScript API (or Leaflet)
-- Displays neighborhood heatmaps for:
-  - Rent trends
-  - Crime density
-- Shows pins for user-generated content such as:
-  - Events
-  - Yard sales
-  - Crime reports
-
-### Hyper-Local Content & Community Features
-- Neighborhood-based access control
-- Users can only view and post content within their registered area
-- Features include:
-  - Local events with RSVP support
-  - Yard sale listings with image uploads
-  - Neighborhood-specific crime reports
-
-### Historical Data Analysis & Charts
-- Users select neighborhoods to view historical trends
-- Data served via Next.js API routes from MongoDB
-- Interactive visualizations rendered using Chart.js
-
-### Secure Authentication & Content Moderation
-- User management via Firebase Authentication
-- Role-based access control (user, moderator, admin)
-- Content moderation workflow:
-  - Users can flag inappropriate content
-  - Moderators review and remove flagged content
-  - Admin dashboard for oversight
-
-### Real-Time Communication & Notifications
-- Neighborhood-based real-time chatrooms using Socket.io
-- Instant notifications for:
-  - Crime alerts
-  - New events
-  - New messages
-- Push notifications delivered using:
-  - Firebase Cloud Messaging
-  - Service Workers
-
----
+## Notes on Secrets
+The code can fall back to GitHub Gist-based secrets. For your own deployment, supply `.env.local` values directly or point those files at your own Gist URLs.
